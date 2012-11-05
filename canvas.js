@@ -112,7 +112,7 @@ function keyboard()
 			player.move(0,-moveSpeed);
 			break;
 		case 69:
-			player.setDest({tileX:6,tileY:0,tileXPos:0,tileYPos:0});
+			player.setDest({tileX:0,tileY:8,tileXPos:0,tileYPos:0});
 			break;
 		case 80:
 			console.log("Player position tile:(" + player.tileX + "," + player.tileY + ")"); 
@@ -317,32 +317,14 @@ function Entity(tileMap,tileX,tileY)
 				this.currentAnimation.updateWithDelta(delta);
 		
 		if(this.player && this.dest !== undefined) {
-			//Calculate the vector between here and there.
-			var playerX = (this.tileY * this.tileWidth / 2) + 
-									(this.tileX * this.tileWidth / 2);
-			var playerY = (this.tileX * this.tileHeight / 2) - 
-									(this.tileY * this.tileHeight / 2);		
-
-			playerX += this.tileXPos + this.tileYPos;		
-			playerY += (this.tileXPos - this.tileYPos) / 2 + 0.0;
-
-			//calculate the tile and sub coord we are trying to get to.
-			var destX = (this.dest.tileY * this.tileWidth / 2) + 
-									(this.dest.tileX * this.tileWidth / 2);
-			var destY = (this.dest.tileX * this.tileHeight / 2) - 
-									(this.dest.tileY * this.tileHeight / 2);			
-
-			destX += this.dest.tileXPos + this.dest.tileYPos;
-			destY += (this.dest.tileXPos - this.dest.tileYPos) / 2 + 0.0;
+			var playerX = this.tileX;
+			var playerY = this.tileY;
 			
-/*			var fx =  playerX - destX;
-			var fy =  playerY - destY;
+			var destX = this.dest.tileX;
+			var destY = this.dest.tileY;
 			
-			var rotation = Math.cos(fx/fy);
-			
-			var xmove = (this.speed * delta/1000) * Math.cos(degreesToRads(rotation));
-			var ymove = (this.speed * delta/1000) * Math.sin(degreesToRads(rotation));			*/
-			
+//Calculate the vector between here and there, use the unit vector to scale a step
+		
 			var fx = destX - playerX;
 			var fy = destY - playerY;
 			
@@ -354,24 +336,14 @@ function Entity(tileMap,tileX,tileY)
 			
 			var xmove = fx*step;
 			var ymove = fy*step;
-			
-/*
-			//Calculate the vector to move along
-			var fX = destX-playerX;
-			var fY = destY-playerY;
-			var dist = Math.sqrt(fX*fX + fY*fY);
-			var step = (this.speed*(delta/1000))/dist;	//Scale the speed for time, pixels per second.
-			
-			var xmove = fX*step;
-			var ymove = fY*step;
-*/
-			
-			//console.log("Moving towards a position " + xmove + "," + ymove);
 			this.move(xmove,ymove);
-			//I dont seem to be able to do the basic maths without help. I really need to work on my geometry.
-			//When we reach the destination tile, we have arrived so we can clear dest.
-			if(this.dest.tileX === this.tileX && this.dest.tileY === this.tileY)
-				this.dest = undefined;				
+			
+			//Once we have arrived clear out the destination.
+			if(this.dest.tileX === this.tileX && this.dest.tileY === this.tileY) {
+				this.dest = undefined;
+				//if(this.dest.tileXPos === this.tileXPos && this.dest.tileYPos === this.tileYPos)
+				//	this.dest = undefined;
+			}					
 		}
 	};
 	
@@ -389,13 +361,11 @@ function Entity(tileMap,tileX,tileY)
 									(this.tileY * this.tileHeight / 2);
 		
 		ctx.translate(screenX,screenY);		
-//console.log("Tile render position (" + screenX + "," + screenY + ")");
 		
 		screenX = this.tileXPos + this.tileYPos;
 		screenY = (this.tileXPos - this.tileYPos) / 2 + 0.0; //The 0.0 is a z coord for depth sorting
 
 		ctx.translate(screenX,screenY);
-//console.log("Tile render location (" + screenX + "," + screenY + ")");
 
 		if(this.animations == undefined)
 			this.animations = [];
