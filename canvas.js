@@ -335,13 +335,25 @@ function Entity(tileMap,tileX,tileY)
 			destX += this.dest.tileXPos + this.dest.tileYPos;
 			destY += (this.dest.tileXPos - this.dest.tileYPos) / 2 + 0.0;
 			
-			var fx =  playerX - destX;
+/*			var fx =  playerX - destX;
 			var fy =  playerY - destY;
 			
 			var rotation = Math.cos(fx/fy);
 			
 			var xmove = (this.speed * delta/1000) * Math.cos(degreesToRads(rotation));
-			var ymove = (this.speed * delta/1000) * Math.sin(degreesToRads(rotation));			
+			var ymove = (this.speed * delta/1000) * Math.sin(degreesToRads(rotation));			*/
+			
+			var fx = destX - playerX;
+			var fy = destY - playerY;
+			
+			var mag = Math.sqrt( (fx*fx) + (fy*fy));
+			fx = fx/mag;
+			fy = fy/mag;
+			
+			var step = (this.speed*(delta/1000));	//Scale the speed for time, pixels per second.
+			
+			var xmove = fx*step;
+			var ymove = fy*step;
 			
 /*
 			//Calculate the vector to move along
@@ -356,7 +368,7 @@ function Entity(tileMap,tileX,tileY)
 			
 			//console.log("Moving towards a position " + xmove + "," + ymove);
 			this.move(xmove,ymove);
-			I dont seem to be able to do the basic maths without help. I really need to work on my geometry.
+			//I dont seem to be able to do the basic maths without help. I really need to work on my geometry.
 			//When we reach the destination tile, we have arrived so we can clear dest.
 			if(this.dest.tileX === this.tileX && this.dest.tileY === this.tileY)
 				this.dest = undefined;				
