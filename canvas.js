@@ -324,7 +324,6 @@ function Entity(tileMap,tileX,tileY)
 			var destY = this.dest.tileY;
 			
 //Calculate the vector between here and there, use the unit vector to scale a step
-		
 			var fx = destX - playerX;
 			var fy = destY - playerY;
 			
@@ -349,10 +348,6 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.draw = function()
 	{
-/*
-		screen_x = sprite_x - sprite_y
-		screen_y = (sprite_x + sprite_y) / 2 + sprite_z	
-*/
 		ctx.save();
 		//Translate to the tile	
 		var screenX = (this.tileY * this.tileWidth / 2) + 
@@ -383,9 +378,7 @@ function Entity(tileMap,tileX,tileY)
 	};
 	
 	this.move = function(xoffset,yoffset)
-	{
-		//console.log("Standing at tile (" + this.tileX + "," + this.tileY +
-		//		") tile position (" + this.tileXPos + "," + this.tileYPos + ")");										
+	{									
 		this.oldTileX = this.tileX;
 		this.oldTileY = this.tileY;
 		this.oldTileXPos = this.tileXPos;
@@ -637,8 +630,6 @@ function Debug(width,height,tileMap)
 	
 	this.clicked = function(button,x,y)
 	{
-		//console.log(" button " + button + " x: " + x + " y: " + y);
-		
 		//Roll back the translation for appearance
 		x -= this.translateX;
 		y -= this.translateY;
