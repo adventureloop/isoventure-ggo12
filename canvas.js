@@ -220,6 +220,14 @@ function TileMap(tiles,tileMap)
 		if(this.tileMap[x][y] > tiles.length-1)
 			this.tileMap[x][y] = 0;
 	}
+	
+	this.clicked = function(x,y)
+	{
+		x = ((x) / (tiles.width/1.5));
+		y = Math.floor(y/(tiles.height/2));
+		//We need to undo the isometric conversion to get real (x,y) coords
+		console.log("Clicked tile (" + x , + "," + y + ")");
+	}
 }
 
 function Animation(animationInterval,sprite,frames)
@@ -448,7 +456,9 @@ function Game(width,height,debugWidth,debugHeight)
 {
 	this.width = width;
 	this.height = height;
-
+	this.translateX = 0;
+	this.translateY = 160;
+	
 	this.lastUpdateTime = 0;
     this.lastFpsTime = 0;
     this.lastLoopTime = 0;
@@ -555,7 +565,7 @@ function Game(width,height,debugWidth,debugHeight)
 		ctx.save();		
 		
 		//Position the tilemap
-		ctx.translate(0,160);			
+		ctx.translate(this.translateX,this.translateY);			
 		
 		//entities.push(player);
 		this.tileMap.drawTileMap(entities);
@@ -580,6 +590,12 @@ function Game(width,height,debugWidth,debugHeight)
 	this.clicked = function(button,x,y)
 	{
 		console.log(" button " + button + " x: " + x + " y: " + y);
+		
+		//Undo screen centering
+		x -= this.translateX;
+		y -= this.translateY;
+		
+		var tile = this.tileMap.clicked(x,y);
 	} 
 }
 
@@ -636,8 +652,7 @@ function Debug(width,height,tileMap)
 
         x = Math.floor(x/(10+5));		
 		y = Math.floor(y/(10+5));
-
-        
+		
         console.log("x: " + x + " y: " + y);
         
         this.tileMap.changeTile(x,y);
