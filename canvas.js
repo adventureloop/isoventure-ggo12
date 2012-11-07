@@ -528,6 +528,35 @@ function generateRandomDest(delta,entity)
 
 }
 
+function headAlongVector(delta,entity)
+{
+	if(entity.dest !== undefined) {
+		
+		var playerX = entity.tileX;
+		var playerY = entity.tileY;
+
+		var destX = entity.dest.tileX;
+		var destY = entity.dest.tileY;
+
+//Calculate the vector between here and there, use the unit vector to scale a step
+      	var fx = destX - playerX;
+		var fy = destY - playerY;
+
+		var mag = Math.sqrt( (fx*fx) + (fy*fy));
+		fx = fx/mag;
+		fy = fy/mag;
+
+		var step = (entity.speed*(delta/1000));	//Scale the speed for time, pixels per second.
+
+		entity.xmove = fx*step;
+		entity.ymove = fy*step;
+		
+		//Remove the destination to avoid recalculation
+		entity.dest = undefined
+	}
+	if(entity.xmove !== undefined && entity.ymove !== undefined) 
+		entity.move(entity.xmove,entity.ymove);
+}
 function Game(width,height,debugWidth,debugHeight) 
 {
 	this.width = width;
@@ -560,6 +589,7 @@ function Game(width,height,debugWidth,debugHeight)
 	player.life = 100;
 	player.player = true;
 	player.addComponent(headToComponent);
+	//player.addComponent(headAlongVector);
 
 	var entities = [];
 
