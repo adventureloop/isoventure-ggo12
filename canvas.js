@@ -16,6 +16,10 @@ tiles[4] = new Image();
 tiles[4].src = "images/DownStairTile.png";
 tiles[4].enterable = true;
 tiles[4].blocksView = false;
+tiles[5] = new Image();
+tiles[5].src = "images/FloorTileDebug.png";
+tiles[5].enterable = true;
+tiles[5].blocksView = false;
 tiles.width = 108;
 tiles.height = 54;
 
@@ -27,7 +31,10 @@ var tileMap = [[2,2,2,2,0,0,2,2,2],[1,1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1,1],					
 var tileMap = [[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],				[3,3,3,3,3,3,3,4,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],
 [3,3,3,3,3,3,3,3,3]];
 
-
+/*
+var tileMap = [[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],				[5,5,5,5,5,5,5,4,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],
+[5,5,5,5,5,5,5,5,5]];
+*/
 tileMap.width = tileMap.length;
 tileMap.height = tileMap[0].length;
 
@@ -137,8 +144,8 @@ function TileMap(tiles,tileMap)
 	
 	this.drawTileMap = function(entities)
 	{	
-		var width = tiles.width;
-		var height = tiles.height;
+		var width = this.tiles.width;
+		var height = this.tiles.height;
 		for (var i = 0; i < this.tileMap.width; i++) {
 		    for (var j = this.tileMap.height-1;j >= 0; j--) {
 			
@@ -193,8 +200,8 @@ function TileMap(tiles,tileMap)
 	
 	this.drawDebug = function()
 	{
-		var width = tiles.width;
-		var height = tiles.height;
+		var width = this.tiles.width;
+		var height = this.tiles.height;
 
 		for (var i = 0; i < this.tileMap.width; i++) {
 		    for (var j = this.tileMap.height-1;j >= 0; j--) {
@@ -223,10 +230,27 @@ function TileMap(tiles,tileMap)
 	
 	this.clicked = function(x,y)
 	{
-		x = ((x) / (tiles.width/1.5));
-		y = Math.floor(y/(tiles.height/2));
+		console.log("Checking  x: " + x + " y: " + y);
+		//x = (x / (this.tiles.width/2));
+		//y = (y/(this.tiles.width/4));
 		//We need to undo the isometric conversion to get real (x,y) coords
-		console.log("Clicked tile (" + x , + "," + y + ")");
+		//each tiles is 54x108 as a real screen image.	
+		var width = this.tiles.width;
+		var height = this.tiles.height;
+		
+		for (var i = 0; i < this.tileMap.width; i++) {
+		    for (var j = this.tileMap.height-1;j >= 0; j--) {
+				var xpos = (j * width / 2) + (i * width / 2);
+				var ypos = (i * height / 2) - (j * height / 2);
+
+				if((x > xpos && x < xpos + 108) && (y > ypos+54 && y < ypos + 108)) {
+					console.log("Hit tile (" + i + "," + j + ")");
+					//Return the first tile hit, DEBUG this later
+					return {tileX:i,tileY:j,tileXPos:54,tileYPos:54};
+				}
+			}
+		}
+		//console.log("Clicked tile (" + x + "," + y + ")");
 	}
 }
 
@@ -589,13 +613,16 @@ function Game(width,height,debugWidth,debugHeight)
     								
 	this.clicked = function(button,x,y)
 	{
-		console.log(" button " + button + " x: " + x + " y: " + y);
+//		console.log(" button " + button + " x: " + x + " y: " + y);
 		
 		//Undo screen centering
 		x -= this.translateX;
 		y -= this.translateY;
 		
+//		console.log("Checking " + button + " x: " + x + " y: " + y);
 		var tile = this.tileMap.clicked(x,y);
+		console.log(tile);
+		player.setDest(tile);
 	} 
 }
 
@@ -610,7 +637,7 @@ function Debug(width,height,tileMap)
 
 	this.tileMap = tileMap;
 	
-	this.colours = ["rgba(0,0,0,0.1)","green","red","orange","cyan"];
+	this.colours = ["rgba(0,0,0,0.1)","green","red","orange","cyan","blue"];
 	
 	this.draw = function()
 	{
@@ -652,8 +679,6 @@ function Debug(width,height,tileMap)
 
         x = Math.floor(x/(10+5));		
 		y = Math.floor(y/(10+5));
-		
-        console.log("x: " + x + " y: " + y);
         
         this.tileMap.changeTile(x,y);
 	}
