@@ -194,7 +194,6 @@ function TileMap(tiles,tileMap)
 		tile = tiles[this.tileMap[tileX][tileY]];
 		if(tile == undefined || !tile.enterable)
 			return false;
-//		console.log("You are allowed into this tile");
 		return true;
 	};
 	
@@ -344,45 +343,12 @@ function Entity(tileMap,tileX,tileY)
 		var enY = enpos.y;
 		
 		var dist = Math.sqrt(Math.pow(enX - x,2) + Math.pow(enY - y,2));
-		if(dist < 40)
+		if(dist < 25)
 			return true;
 	};
 	
 	this.updateWithDelta = function(delta)
 	{
-
-/*		if(this.dest != undefined && this.currentAnimation != undefined)
-				this.currentAnimation.updateWithDelta(delta);
-		
-		if(this.dest !== undefined) {
-			var playerX = this.tileX;
-			var playerY = this.tileY;
-			
-			var destX = this.dest.tileX;
-			var destY = this.dest.tileY;
-			
-//Calculate the vector between here and there, use the unit vector to scale a step
-			var fx = destX - playerX;
-			var fy = destY - playerY;
-			
-			var mag = Math.sqrt( (fx*fx) + (fy*fy));
-			fx = fx/mag;
-			fy = fy/mag;
-			
-			var step = (this.speed*(delta/1000));	//Scale the speed for time, pixels per second.
-			
-			var xmove = fx*step;
-			var ymove = fy*step;
-			this.move(xmove,ymove);
-			
-			//Once we have arrived clear out the destination.
-			if(this.dest.tileX === this.tileX && this.dest.tileY === this.tileY) {
-				this.dest = undefined;
-				//if(this.dest.tileXPos === this.tileXPos && this.dest.tileYPos === this.tileYPos)
-				//	this.dest = undefined;
-			}					
-		}*/
-
       	for(var i = 0;i < this.components.length;i++)
           this.components[i](delta,this);
 	};
@@ -579,30 +545,34 @@ function Game(width,height,debugWidth,debugHeight)
     sprite.src = "images/BaseSpriteSheet.png";
 
 	var frames = [{width:64,height:64,x:0,y:0},
-				//{width:64,height:64,x:64,y:0},
+				{width:64,height:64,x:64,y:0},
 				{width:64,height:64,x:128,y:0},
-				//{width:64,height:64,x:64,y:0}
+				{width:64,height:64,x:64,y:0}
 				];
 
 	player = new Entity(this.tileMap,0,0);
 	player.addAnimation(new Animation(200,sprite,frames));
-	player.life = 100;
+	player.life = 20;
 	player.player = true;
 	player.addComponent(headToComponent);
 	//player.addComponent(headAlongVector);
 
+	var bullets = [];
 	var entities = [];
-
-	frames = [{width:64,height:64,x:0,y:0}];
-	var esprite = new Image();
-	esprite.src = "images/SpriteShooting.png";
 
   	for(var i = 1;i < 4;i++) {
       	var e = new Entity(this.tileMap,i+2,6);
+		e.speed = 15;
+		e.life = 10;
       	e.addComponent(headToComponent);
       	e.addComponent(generateRandomDest);
       	entities.push(e);
   	}
+
+	frames = [{width:64,height:64,x:0,y:0}];
+	var esprite = new Image();
+	esprite.src = "images/SpriteShooting.png";
+	
 	for(var i = 0;i < entities.length;i++) 
 		entities[i].addAnimation(new Animation(0,esprite,frames));
     
@@ -639,7 +609,16 @@ function Game(width,height,debugWidth,debugHeight)
 		for(var i = 0;i < entities.length;i++) {
 			if(player.collidesWithEntity(entities[i])) {
 				player.hit();
-				entities[i].hit();				
+				//entities[i].hit();				
+			}				
+		}
+
+		//Check whether bullets have hit enemy
+		for(var i = 0;i < bullets.length;i++) {
+			for(var j = 0;j < entities.length;j++)
+				if(bullets[i].collidesWithEntity(entities[j])) {
+					bullets[i].hit();
+					entities[j].hit();				
 			}				
 		}
 		
@@ -651,7 +630,15 @@ function Game(width,height,debugWidth,debugHeight)
 		}
 		
 		entities = tmp;
-        
+       	tmp = []; 
+		for(var i = 0;i < bullets.length;i++) {
+			var b = bullets[i];
+			if(!this.tileMap.validTilePos(b.tileX,b.tileY))
+				b.hit();
+			if(b.life > 0)
+				tmp.push(b);
+		}
+		bullets = tmp
         this.draw();
 	};
 	
@@ -661,6 +648,10 @@ function Game(width,height,debugWidth,debugHeight)
 	
 		for(var i = 0;i < entities.length;i++) {
 			entities[i].updateWithDelta(delta);				
+		}
+
+		for(var i = 0;i < bullets.length;i++) {
+			bullets[i].updateWithDelta(delta);				
 		}
 	};
 	
@@ -673,6 +664,7 @@ function Game(width,height,debugWidth,debugHeight)
 								this.width-112,this.height-2);
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
+		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
 		ctx.save();		
 		
 		//Position the tilemap
@@ -682,6 +674,10 @@ function Game(width,height,debugWidth,debugHeight)
 		this.tileMap.drawTileMap(entities);
 		//entities.pop;
 		player.draw();
+		
+		for(var i = 0;i < bullets.length;i++) {
+			bullets[i].draw();				
+		}
 		ctx.restore();
 		
 		this.debug.draw();
@@ -712,13 +708,28 @@ function Game(width,height,debugWidth,debugHeight)
 
       	switch(button) 
         {
-          case 1:
+        case 1:
 			player.setDest(tile);
          	break;
-          case 2:
+        case 3:
             //Add new bullet in direction
+			console.log("Adding bullet");
+			var bsprite = new Image();
+			bsprite.src = "images/Shot.png";
+
+			var bframes = [{width:5,height:5,x:11,y:11}]
+
+			var b = new Entity(this.tileMap,player.tileX,
+												player.tileY);
+			b.tileXPos = player.tileXPos;
+			b.tileYPos = player.tileYPos;
+			b.addAnimation(new Animation(0,bsprite,bframes));
+			b.addComponent(headAlongVector);
+			b.setDest(tile);
+			b.speed = 200;
+			bullets.push(b);
             break;
-          default:
+        default:
             break;
         }
 	} 
