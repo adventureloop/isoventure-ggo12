@@ -55,7 +55,7 @@ function init()
 	ctx = canvas.getContext('2d');
 	
 	console.log("Contex is " + ctx);
-	
+
 	game = new Game(canvas.width,canvas.height,
 					debugCanvas.width,debugCanvas.height);
 	
@@ -295,6 +295,11 @@ function Animation(animationInterval,sprite,frames)
 
 	//	ctx.drawImage(this.sprite,0,0,64,64,0,0,64,64);
 	};
+
+  	this.stop = function()
+    {
+    	this.currentFrame = 0;
+    }
 }
 
 function Entity(tileMap,tileX,tileY)
@@ -345,7 +350,8 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.updateWithDelta = function(delta)
 	{
-		if(this.currentAnimation != undefined)
+
+		if(this.dest != undefined && this.currentAnimation != undefined)
 				this.currentAnimation.updateWithDelta(delta);
 		
 		if(this.player && this.dest !== undefined) {
@@ -582,7 +588,7 @@ function Game(width,height,debugWidth,debugHeight)
 		ctx.clearRect(0,0,this.width,this.height); // clear canvas
 		
 		ctx.strokeText("FPS: " + this.latestFPS,2,10);
-		ctx.strokeText("BUILD: Debug Mode",
+		ctx.strokeText("BUILD: Click click click",
 								this.width-112,this.height-2);
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
@@ -613,7 +619,7 @@ function Game(width,height,debugWidth,debugHeight)
     								
 	this.clicked = function(button,x,y)
 	{
-//		console.log(" button " + button + " x: " + x + " y: " + y);
+		console.log(" button " + button + " x: " + x + " y: " + y);
 		
 		//Undo screen centering
 		x -= this.translateX;
@@ -622,7 +628,18 @@ function Game(width,height,debugWidth,debugHeight)
 //		console.log("Checking " + button + " x: " + x + " y: " + y);
 		var tile = this.tileMap.clicked(x,y);
 		console.log(tile);
-		player.setDest(tile);
+
+      	switch(button) 
+        {
+          case 1:
+			player.setDest(tile);
+         	break;
+          case 2:
+            //Add new bullet in direction
+            break;
+          default:
+            break;
+        }
 	} 
 }
 
