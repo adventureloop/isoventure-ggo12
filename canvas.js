@@ -351,10 +351,10 @@ function Entity(tileMap,tileX,tileY)
 	this.updateWithDelta = function(delta)
 	{
 
-		if(this.dest != undefined && this.currentAnimation != undefined)
+/*		if(this.dest != undefined && this.currentAnimation != undefined)
 				this.currentAnimation.updateWithDelta(delta);
 		
-		if(this.player && this.dest !== undefined) {
+		if(this.dest !== undefined) {
 			var playerX = this.tileX;
 			var playerY = this.tileY;
 			
@@ -381,7 +381,10 @@ function Entity(tileMap,tileX,tileY)
 				//if(this.dest.tileXPos === this.tileXPos && this.dest.tileYPos === this.tileYPos)
 				//	this.dest = undefined;
 			}					
-		}
+		}*/
+
+      	for(var i = 0;i < this.components.length;i++)
+          this.components[i](delta,this);
 	};
 	
 	this.draw = function()
@@ -481,6 +484,49 @@ function Entity(tileMap,tileX,tileY)
 	};
 }
 
+function headToComponent(delta,entity)
+{
+
+	if(entity.dest != undefined && entity.currentAnimation != undefined)
+      entity.currentAnimation.updateWithDelta(delta);
+
+	if(entity.dest !== undefined) {
+		var playerX = entity.tileX;
+		var playerY = entity.tileY;
+
+		var destX = entity.dest.tileX;
+		var destY = entity.dest.tileY;
+
+//Calculate the vector between here and there, use the unit vector to scale a step
+      	var fx = destX - playerX;
+		var fy = destY - playerY;
+
+		var mag = Math.sqrt( (fx*fx) + (fy*fy));
+		fx = fx/mag;
+		fy = fy/mag;
+
+		var step = (entity.speed*(delta/1000));	//Scale the speed for time, pixels per second.
+
+		var xmove = fx*step;
+		var ymove = fy*step;
+		entity.move(xmove,ymove);
+
+		//Once we have arrived clear out the destination.
+		if(entity.dest.tileX === entity.tileX && entity.dest.tileY === entity.tileY) {
+			entity.dest = undefined;
+			//if(this.dest.tileXPos === this.tileXPos && this.dest.tileYPos === this.tileYPos)
+			//	this.dest = undefined;
+		}
+    }
+}
+
+function generateRandomDest(delta,entity)
+{
+  	if(entity.dest === undefined) {
+      entity.setDest({tileX:Math.floor(Math.random()*8),tileY:Math.floor(Math.random()*8),tileXPos:0,tileYPos:0});
+  	}
+
+}
 
 function Game(width,height,debugWidth,debugHeight) 
 {
@@ -488,18 +534,18 @@ function Game(width,height,debugWidth,debugHeight)
 	this.height = height;
 	this.translateX = 0;
 	this.translateY = 160;
-	
+
 	this.lastUpdateTime = 0;
     this.lastFpsTime = 0;
     this.lastLoopTime = 0;
     this.latestFPS = 0;
     this.fps = 0;
-   
+
     this.tileMap = new TileMap(tiles,tileMap);
     this.tileMap.debug = true;
-    
+
     this.debug = new Debug(debugWidth,debugHeight,this.tileMap);
-        
+
     var sprite = new Image();
     sprite.src = "images/BaseSpriteSheet.png";
 
@@ -513,15 +559,20 @@ function Game(width,height,debugWidth,debugHeight)
 	player.addAnimation(new Animation(200,sprite,frames));
 	player.life = 100;
 	player.player = true;
-	
+	player.addComponent(headToComponent);
+
 	var entities = [];
-	
+
 	frames = [{width:64,height:64,x:0,y:0}];
 	var esprite = new Image();
 	esprite.src = "images/SpriteShooting.png";
-	
-	for(var i = 1;i < 4;i++)
-		entities.push(new Entity(this.tileMap,i+2,6));
+
+  	for(var i = 1;i < 4;i++) {
+      	var e = new Entity(this.tileMap,i+2,6);
+      	e.addComponent(headToComponent);
+      	e.addComponent(generateRandomDest);
+      	entities.push(e);
+  	}
 	for(var i = 0;i < entities.length;i++) 
 		entities[i].addAnimation(new Animation(0,esprite,frames));
     
