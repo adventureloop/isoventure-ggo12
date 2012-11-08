@@ -365,11 +365,11 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.collidesWithEntity = function(entity)
 	{		
-		var mypos = this.worldCoords();
+		var mypos = this.screenPosition();
 		var x = mypos.x;
 		var y = mypos.y;		
 		
-		var enpos = entity.worldCoords();
+		var enpos = entity.screenPosition();
 		var enX = enpos.x;
 		var enY = enpos.y;
 		
@@ -398,6 +398,7 @@ function Entity(tileMap,tileX,tileY)
 		screenX = this.tileXPos + this.tileYPos;
 		screenY = (this.tileXPos - this.tileYPos) / 2 + 0.0; //The 0.0 is a z coord for depth sorting
 
+		var pos = this.screenPosition();
 		ctx.translate(screenX,screenY);
 
 		if(this.animations == undefined)
@@ -459,13 +460,17 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.worldCoords = function()
 	{
+	}
+	
+	this.screenPosition = function()
+	{
 		var screenX = (this.tileY * this.tileWidth / 2) + 
 									(this.tileX * this.tileWidth / 2);
 		var screenY = (this.tileX * this.tileHeight / 2) - 
 									(this.tileY * this.tileHeight / 2);			
 		
-		screenX = screenX + (this.tileXPos + this.tileYPos);
-		screenY = screenY + ((this.tileXPos - this.tileYPos) / 2 + 0.0);	
+		screenX += screenX + (this.tileXPos + this.tileYPos);
+		screenY += screenY + ((this.tileXPos - this.tileYPos) / 2 + 0.0);	
 		
 		return {x:screenX,y:screenY};
 	}
@@ -701,6 +706,12 @@ function Game(width,height,debugWidth,debugHeight)
 				tmp.push(b);
 		}
 		bullets = tmp
+		
+		//Center the player in the screen
+		this.translateX = 0;
+		this.translateY = 0; I need to calculate a centering box around the player which varies which moves as he approaches the edge.
+		
+		
         this.draw();
 	};
 	
