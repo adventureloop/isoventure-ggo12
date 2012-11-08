@@ -16,6 +16,10 @@ tiles[4] = new Image();
 tiles[4].src = "images/DownStairTile.png";
 tiles[4].enterable = true;
 tiles[4].blocksView = false;
+tiles[5] = new Image();
+tiles[5].src = "images/FloorTileDebug.png";
+tiles[5].enterable = true;
+tiles[5].blocksView = false;
 tiles.width = 108;
 tiles.height = 54;
 
@@ -27,7 +31,10 @@ var tileMap = [[2,2,2,2,0,0,2,2,2],[1,1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1,1],					
 var tileMap = [[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],				[3,3,3,3,3,3,3,4,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],
 [3,3,3,3,3,3,3,3,3]];
 
-
+/*
+var tileMap = [[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],				[5,5,5,5,5,5,5,4,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],
+[5,5,5,5,5,5,5,5,5]];
+*/
 tileMap.width = tileMap.length;
 tileMap.height = tileMap[0].length;
 
@@ -48,7 +55,7 @@ function init()
 	ctx = canvas.getContext('2d');
 	
 	console.log("Contex is " + ctx);
-	
+
 	game = new Game(canvas.width,canvas.height,
 					debugCanvas.width,debugCanvas.height);
 	
@@ -112,7 +119,7 @@ function keyboard()
 			player.move(0,-moveSpeed);
 			break;
 		case 69:
-			player.setDest({tileX:6,tileY:0,tileXPos:0,tileYPos:0});
+			player.setDest({tileX:0,tileY:8,tileXPos:0,tileYPos:0});
 			break;
 		case 80:
 			console.log("Player position tile:(" + player.tileX + "," + player.tileY + ")"); 
@@ -137,8 +144,8 @@ function TileMap(tiles,tileMap)
 	
 	this.drawTileMap = function(entities)
 	{	
-		var width = tiles.width;
-		var height = tiles.height;
+		var width = this.tiles.width;
+		var height = this.tiles.height;
 		for (var i = 0; i < this.tileMap.width; i++) {
 		    for (var j = this.tileMap.height-1;j >= 0; j--) {
 			
@@ -187,14 +194,13 @@ function TileMap(tiles,tileMap)
 		tile = tiles[this.tileMap[tileX][tileY]];
 		if(tile == undefined || !tile.enterable)
 			return false;
-//		console.log("You are allowed into this tile");
 		return true;
 	};
 	
 	this.drawDebug = function()
 	{
-		var width = tiles.width;
-		var height = tiles.height;
+		var width = this.tiles.width;
+		var height = this.tiles.height;
 
 		for (var i = 0; i < this.tileMap.width; i++) {
 		    for (var j = this.tileMap.height-1;j >= 0; j--) {
@@ -219,6 +225,31 @@ function TileMap(tiles,tileMap)
 		this.tileMap[x][y]++;
 		if(this.tileMap[x][y] > tiles.length-1)
 			this.tileMap[x][y] = 0;
+	}
+	
+	this.clicked = function(x,y)
+	{
+		console.log("Checking  x: " + x + " y: " + y);
+		//x = (x / (this.tiles.width/2));
+		//y = (y/(this.tiles.width/4));
+		//We need to undo the isometric conversion to get real (x,y) coords
+		//each tiles is 54x108 as a real screen image.	
+		var width = this.tiles.width;
+		var height = this.tiles.height;
+		
+		for (var i = 0; i < this.tileMap.width; i++) {
+		    for (var j = this.tileMap.height-1;j >= 0; j--) {
+				var xpos = (j * width / 2) + (i * width / 2);
+				var ypos = (i * height / 2) - (j * height / 2);
+
+				if((x > xpos && x < xpos + 108) && (y > ypos+54 && y < ypos + 108)) {
+					console.log("Hit tile (" + i + "," + j + ")");
+					//Return the first tile hit, DEBUG this later
+					return {tileX:i,tileY:j,tileXPos:54,tileYPos:54};
+				}
+			}
+		}
+		//console.log("Clicked tile (" + x + "," + y + ")");
 	}
 }
 
@@ -263,6 +294,11 @@ function Animation(animationInterval,sprite,frames)
 
 	//	ctx.drawImage(this.sprite,0,0,64,64,0,0,64,64);
 	};
+
+  	this.stop = function()
+    {
+    	this.currentFrame = 0;
+    }
 }
 
 function Entity(tileMap,tileX,tileY)
@@ -307,68 +343,18 @@ function Entity(tileMap,tileX,tileY)
 		var enY = enpos.y;
 		
 		var dist = Math.sqrt(Math.pow(enX - x,2) + Math.pow(enY - y,2));
-		if(dist < 40)
+		if(dist < 25)
 			return true;
 	};
 	
 	this.updateWithDelta = function(delta)
 	{
-		if(this.currentAnimation != undefined)
-				this.currentAnimation.updateWithDelta(delta);
-		
-		if(this.player && this.dest !== undefined) {
-			//Calculate the vector between here and there.
-			var playerX = (this.tileY * this.tileWidth / 2) + 
-									(this.tileX * this.tileWidth / 2);
-			var playerY = (this.tileX * this.tileHeight / 2) - 
-									(this.tileY * this.tileHeight / 2);		
-
-			playerX += this.tileXPos + this.tileYPos;		
-			playerY += (this.tileXPos - this.tileYPos) / 2 + 0.0;
-
-			//calculate the tile and sub coord we are trying to get to.
-			var destX = (this.dest.tileY * this.tileWidth / 2) + 
-									(this.dest.tileX * this.tileWidth / 2);
-			var destY = (this.dest.tileX * this.tileHeight / 2) - 
-									(this.dest.tileY * this.tileHeight / 2);			
-
-			destX += this.dest.tileXPos + this.dest.tileYPos;
-			destY += (this.dest.tileXPos - this.dest.tileYPos) / 2 + 0.0;
-			
-			var fx =  playerX - destX;
-			var fy =  playerY - destY;
-			
-			var rotation = Math.cos(fx/fy);
-			
-			var xmove = (this.speed * delta/1000) * Math.cos(degreesToRads(rotation));
-			var ymove = (this.speed * delta/1000) * Math.sin(degreesToRads(rotation));			
-			
-/*
-			//Calculate the vector to move along
-			var fX = destX-playerX;
-			var fY = destY-playerY;
-			var dist = Math.sqrt(fX*fX + fY*fY);
-			var step = (this.speed*(delta/1000))/dist;	//Scale the speed for time, pixels per second.
-			
-			var xmove = fX*step;
-			var ymove = fY*step;
-*/
-			
-			//console.log("Moving towards a position " + xmove + "," + ymove);
-			this.move(xmove,ymove);
-			I dont seem to be able to do the basic maths without help. I really need to work on my geometry.
-			//When we reach the destination tile, we have arrived so we can clear dest.
-			if(this.dest.tileX === this.tileX && this.dest.tileY === this.tileY)
-				this.dest = undefined;				
-		}
+      	for(var i = 0;i < this.components.length;i++)
+          this.components[i](delta,this);
 	};
 	
 	this.draw = function()
 	{
-/*
-		screen_x = sprite_x - sprite_y
-		screen_y = (sprite_x + sprite_y) / 2 + sprite_z	
-*/
 		ctx.save();
 		//Translate to the tile	
 		var screenX = (this.tileY * this.tileWidth / 2) + 
@@ -377,13 +363,11 @@ function Entity(tileMap,tileX,tileY)
 									(this.tileY * this.tileHeight / 2);
 		
 		ctx.translate(screenX,screenY);		
-//console.log("Tile render position (" + screenX + "," + screenY + ")");
 		
 		screenX = this.tileXPos + this.tileYPos;
 		screenY = (this.tileXPos - this.tileYPos) / 2 + 0.0; //The 0.0 is a z coord for depth sorting
 
 		ctx.translate(screenX,screenY);
-//console.log("Tile render location (" + screenX + "," + screenY + ")");
 
 		if(this.animations == undefined)
 			this.animations = [];
@@ -401,9 +385,7 @@ function Entity(tileMap,tileX,tileY)
 	};
 	
 	this.move = function(xoffset,yoffset)
-	{
-		//console.log("Standing at tile (" + this.tileX + "," + this.tileY +
-		//		") tile position (" + this.tileXPos + "," + this.tileYPos + ")");										
+	{									
 		this.oldTileX = this.tileX;
 		this.oldTileY = this.tileY;
 		this.oldTileXPos = this.tileXPos;
@@ -468,45 +450,129 @@ function Entity(tileMap,tileX,tileY)
 	};
 }
 
+function headToComponent(delta,entity)
+{
 
+	if(entity.dest != undefined && entity.currentAnimation != undefined)
+      entity.currentAnimation.updateWithDelta(delta);
+
+	if(entity.dest !== undefined) {
+		var playerX = entity.tileX;
+		var playerY = entity.tileY;
+
+		var destX = entity.dest.tileX;
+		var destY = entity.dest.tileY;
+
+//Calculate the vector between here and there, use the unit vector to scale a step
+      	var fx = destX - playerX;
+		var fy = destY - playerY;
+
+		var mag = Math.sqrt( (fx*fx) + (fy*fy));
+		fx = fx/mag;
+		fy = fy/mag;
+
+		var step = (entity.speed*(delta/1000));	//Scale the speed for time, pixels per second.
+
+		var xmove = fx*step;
+		var ymove = fy*step;
+		entity.move(xmove,ymove);
+
+		//Once we have arrived clear out the destination.
+		if(entity.dest.tileX === entity.tileX && entity.dest.tileY === entity.tileY) {
+			entity.dest = undefined;
+			//if(this.dest.tileXPos === this.tileXPos && this.dest.tileYPos === this.tileYPos)
+			//	this.dest = undefined;
+		}
+    }
+}
+
+function generateRandomDest(delta,entity)
+{
+  	if(entity.dest === undefined) {
+      entity.setDest({tileX:Math.floor(Math.random()*8),tileY:Math.floor(Math.random()*8),tileXPos:0,tileYPos:0});
+  	}
+
+}
+
+function headAlongVector(delta,entity)
+{
+	if(entity.dest !== undefined) {
+		
+		var playerX = entity.tileX;
+		var playerY = entity.tileY;
+
+		var destX = entity.dest.tileX;
+		var destY = entity.dest.tileY;
+
+//Calculate the vector between here and there, use the unit vector to scale a step
+      	var fx = destX - playerX;
+		var fy = destY - playerY;
+
+		var mag = Math.sqrt( (fx*fx) + (fy*fy));
+		fx = fx/mag;
+		fy = fy/mag;
+
+		var step = (entity.speed*(delta/1000));	//Scale the speed for time, pixels per second.
+
+		entity.xmove = fx*step;
+		entity.ymove = fy*step;
+		
+		//Remove the destination to avoid recalculation
+		entity.dest = undefined
+	}
+	if(entity.xmove !== undefined && entity.ymove !== undefined) 
+		entity.move(entity.xmove,entity.ymove);
+}
 function Game(width,height,debugWidth,debugHeight) 
 {
 	this.width = width;
 	this.height = height;
+	this.translateX = 0;
+	this.translateY = 160;
 
 	this.lastUpdateTime = 0;
     this.lastFpsTime = 0;
     this.lastLoopTime = 0;
     this.latestFPS = 0;
     this.fps = 0;
-   
+
     this.tileMap = new TileMap(tiles,tileMap);
     this.tileMap.debug = true;
-    
+
     this.debug = new Debug(debugWidth,debugHeight,this.tileMap);
-        
+
     var sprite = new Image();
     sprite.src = "images/BaseSpriteSheet.png";
 
 	var frames = [{width:64,height:64,x:0,y:0},
-				//{width:64,height:64,x:64,y:0},
+				{width:64,height:64,x:64,y:0},
 				{width:64,height:64,x:128,y:0},
-				//{width:64,height:64,x:64,y:0}
+				{width:64,height:64,x:64,y:0}
 				];
 
 	player = new Entity(this.tileMap,0,0);
 	player.addAnimation(new Animation(200,sprite,frames));
-	player.life = 100;
+	player.life = 20;
 	player.player = true;
-	
+	player.addComponent(headToComponent);
+	//player.addComponent(headAlongVector);
+
+	var bullets = [];
 	var entities = [];
-	
+
+  	for(var i = 1;i < 4;i++) {
+      	var e = new Entity(this.tileMap,i+2,6);
+		e.speed = 15;
+		e.life = 10;
+      	e.addComponent(headToComponent);
+      	e.addComponent(generateRandomDest);
+      	entities.push(e);
+  	}
+
 	frames = [{width:64,height:64,x:0,y:0}];
 	var esprite = new Image();
 	esprite.src = "images/SpriteShooting.png";
 	
-	for(var i = 1;i < 4;i++)
-		entities.push(new Entity(this.tileMap,i+2,6));
 	for(var i = 0;i < entities.length;i++) 
 		entities[i].addAnimation(new Animation(0,esprite,frames));
     
@@ -543,7 +609,16 @@ function Game(width,height,debugWidth,debugHeight)
 		for(var i = 0;i < entities.length;i++) {
 			if(player.collidesWithEntity(entities[i])) {
 				player.hit();
-				entities[i].hit();				
+				//entities[i].hit();				
+			}				
+		}
+
+		//Check whether bullets have hit enemy
+		for(var i = 0;i < bullets.length;i++) {
+			for(var j = 0;j < entities.length;j++)
+				if(bullets[i].collidesWithEntity(entities[j])) {
+					bullets[i].hit();
+					entities[j].hit();				
 			}				
 		}
 		
@@ -555,7 +630,15 @@ function Game(width,height,debugWidth,debugHeight)
 		}
 		
 		entities = tmp;
-        
+       	tmp = []; 
+		for(var i = 0;i < bullets.length;i++) {
+			var b = bullets[i];
+			if(!this.tileMap.validTilePos(b.tileX,b.tileY))
+				b.hit();
+			if(b.life > 0)
+				tmp.push(b);
+		}
+		bullets = tmp
         this.draw();
 	};
 	
@@ -566,6 +649,10 @@ function Game(width,height,debugWidth,debugHeight)
 		for(var i = 0;i < entities.length;i++) {
 			entities[i].updateWithDelta(delta);				
 		}
+
+		for(var i = 0;i < bullets.length;i++) {
+			bullets[i].updateWithDelta(delta);				
+		}
 	};
 	
 	this.draw = function()
@@ -573,19 +660,24 @@ function Game(width,height,debugWidth,debugHeight)
 		ctx.clearRect(0,0,this.width,this.height); // clear canvas
 		
 		ctx.strokeText("FPS: " + this.latestFPS,2,10);
-		ctx.strokeText("BUILD: Debug Mode",
+		ctx.strokeText("BUILD: Clicking game",
 								this.width-112,this.height-2);
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
+		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
 		ctx.save();		
 		
 		//Position the tilemap
-		ctx.translate(0,160);			
+		ctx.translate(this.translateX,this.translateY);			
 		
 		//entities.push(player);
 		this.tileMap.drawTileMap(entities);
 		//entities.pop;
 		player.draw();
+		
+		for(var i = 0;i < bullets.length;i++) {
+			bullets[i].draw();				
+		}
 		ctx.restore();
 		
 		this.debug.draw();
@@ -605,6 +697,41 @@ function Game(width,height,debugWidth,debugHeight)
 	this.clicked = function(button,x,y)
 	{
 		console.log(" button " + button + " x: " + x + " y: " + y);
+		
+		//Undo screen centering
+		x -= this.translateX;
+		y -= this.translateY;
+		
+//		console.log("Checking " + button + " x: " + x + " y: " + y);
+		var tile = this.tileMap.clicked(x,y);
+		console.log(tile);
+
+      	switch(button) 
+        {
+        case 1:
+			player.setDest(tile);
+         	break;
+        case 3:
+            //Add new bullet in direction
+			console.log("Adding bullet");
+			var bsprite = new Image();
+			bsprite.src = "images/bullet.png";
+
+			var bframes = [{width:5,height:5,x:11,y:11}]
+
+			var b = new Entity(this.tileMap,player.tileX,
+												player.tileY);
+			b.tileXPos = player.tileXPos;
+			b.tileYPos = player.tileYPos;
+			b.addAnimation(new Animation(0,bsprite,bframes));
+			b.addComponent(headAlongVector);
+			b.setDest(tile);
+			b.speed = 200;
+			bullets.push(b);
+            break;
+        default:
+            break;
+        }
 	} 
 }
 
@@ -619,7 +746,7 @@ function Debug(width,height,tileMap)
 
 	this.tileMap = tileMap;
 	
-	this.colours = ["rgba(0,0,0,0.1)","green","red","orange","cyan"];
+	this.colours = ["rgba(0,0,0,0.1)","green","red","orange","cyan","blue"];
 	
 	this.draw = function()
 	{
@@ -655,17 +782,12 @@ function Debug(width,height,tileMap)
 	
 	this.clicked = function(button,x,y)
 	{
-		//console.log(" button " + button + " x: " + x + " y: " + y);
-		
 		//Roll back the translation for appearance
 		x -= this.translateX;
 		y -= this.translateY;
 
         x = Math.floor(x/(10+5));		
 		y = Math.floor(y/(10+5));
-
-        
-        console.log("x: " + x + " y: " + y);
         
         this.tileMap.changeTile(x,y);
 	}
