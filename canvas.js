@@ -660,6 +660,21 @@ function Game(width,height,debugWidth,debugHeight)
 
         this.updateWithDelta(delta);        
         
+		this.draw();
+	};
+	
+	this.updateWithDelta = function(delta) 
+	{
+		player.updateWithDelta(delta);
+	
+		for(var i = 0;i < entities.length;i++) {
+			entities[i].updateWithDelta(delta);				
+		}
+
+		for(var i = 0;i < bullets.length;i++) {
+			bullets[i].updateWithDelta(delta);				
+		}
+
         //Control the game now   
         for(var i = 0;i < entities.length;i++) {
 			var e = entities[i];
@@ -710,20 +725,6 @@ function Game(width,height,debugWidth,debugHeight)
 		this.translateY = -pos.y+(this.height/2);
        
 	  	//Render the scene
-		this.draw();
-	};
-	
-	this.updateWithDelta = function(delta) 
-	{
-		player.updateWithDelta(delta);
-	
-		for(var i = 0;i < entities.length;i++) {
-			entities[i].updateWithDelta(delta);				
-		}
-
-		for(var i = 0;i < bullets.length;i++) {
-			bullets[i].updateWithDelta(delta);				
-		}
 	};
 	
 	this.draw = function()
