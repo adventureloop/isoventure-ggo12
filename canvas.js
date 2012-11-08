@@ -15,7 +15,7 @@ var FPS = 1000 / FRAMES_PER_SECOND;
 
 function init()
 {
-	var debugCanvas = document.getElementById('debug');
+	var debugCanvas = document.getElementById('editor');
 	debugCtx = debugCanvas.getContext('2d');
 	
 	var canvas = document.getElementById('game');
@@ -29,7 +29,7 @@ function init()
 	document.getElementById('game').onmousedown = mouse;	
 	document.onkeydown = keyboard;	
 	document.oncontextmenu = contextMenu;
-	document.getElementById('debug').onmousedown = mouse;	
+	document.getElementById('editor').onmousedown = mouse;	
 	
 	setInterval(function(){game.run();},FPS); //Wrapped in an anon func, to stop the scope on run changing
 	//setInterval(game.run,1000);
@@ -56,8 +56,8 @@ function mouse(e)
 		if(e.target.id == 'game')
 			game.clicked(e.which,x,y);
 			
-		if(e.target.id == 'debug')
-			game.debug.clicked(e.which,x,y);
+		if(e.target.id == 'editor')
+			game.mapEditor.clicked(e.which,x,y);
 	}
 }
 
@@ -575,7 +575,7 @@ function Game(width,height,debugWidth,debugHeight)
     this.tileMap = (new TileMapLoader).staticTileMap();
     this.tileMap.debug = true;
 
-    this.debug = new Debug(debugWidth,debugHeight,this.tileMap);
+    this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
 	
 	player = createPlayer(this.tileMap);
 	
@@ -702,7 +702,7 @@ function Game(width,height,debugWidth,debugHeight)
 		}
 		ctx.restore();
 		
-		this.debug.draw();
+		this.mapEditor.draw();
 	};
 	
 	this.getTime = function()
@@ -758,7 +758,7 @@ function Game(width,height,debugWidth,debugHeight)
 }
 
 
-function Debug(width,height,tileMap)
+function TileMapEditor(width,height,tileMap)
 {
 	this.width = width;
 	this.height = height;
