@@ -705,10 +705,12 @@ function Game(width,height,debugWidth,debugHeight)
 		bullets = tmp
 		
 		//Center the player in the screen
-		this.translateX = 0;
-		this.translateY = 0;
-		// I need to calculate a centering box around the player which varies which moves as he approaches the edge.
-        this.draw();
+		var pos = player.screenPosition();
+		this.translateX = -pos.x+(this.width/2);
+		this.translateY = -pos.y+(this.height/2);
+       
+	  	//Render the scene
+		this.draw();
 	};
 	
 	this.updateWithDelta = function(delta) 
