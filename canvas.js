@@ -222,7 +222,7 @@ function TileMap(tiles,tileMap)
 
 function TileMapLoader()
 {
-	this.staticTileMap = function()
+	this.loadTiles = function()
 	{
 		var tiles = [];
 		tiles[0] = undefined;
@@ -247,23 +247,29 @@ function TileMapLoader()
 		tiles.width = 108;
 		tiles.height = 54;
 		
+		return tiles;
+	}
+
+	this.staticTileMap = function() 
+	{
+		var tiles = this.loadTiles();
+		
 		var tileMap = [];
-
-		/*
-
-		var tileMap = [[2,2,2,2,0,0,2,2,2],[1,1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1,1],					[1,1,1,1,1,1,1,1,1],[1,1,1,1,0,0,1,1,1],[1,1,1,1,0,0,1,1,1]];
-		*/
 
 		var tileMap = [[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],				[3,3,3,3,3,3,3,4,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],
 			[3,3,3,3,3,3,3,3,3]];
 
-		/*
-		var tileMap = [[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],				[5,5,5,5,5,5,5,4,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],
-				[5,5,5,5,5,5,5,5,5]];
-		*/
 		tileMap.width = tileMap.length;
 		tileMap.height = tileMap[0].length;
 		return new TileMap(tiles,tileMap);
+	}
+	
+	this.generateTileMap = function(width,height)
+	{
+		var tileMap = [];
+		for(var i = 0;i< width;i++)
+			for(var j = 0;j < height;j++)
+				tileMap.push(1);
 	}
 }
 
