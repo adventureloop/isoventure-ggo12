@@ -1,42 +1,9 @@
-var tiles = [];
-tiles[0] = undefined;
-tiles[1] = new Image();
-tiles[1].src = "images/FloorTile.png";
-tiles[1].enterable = true;
-tiles[1].blocksView = false;
-tiles[2] = new Image();
-tiles[2].src = "images/WallCube.png";
-tiles[2].enterable = false;
-tiles[2].blocksView = true;
-tiles[3] = new Image();
-tiles[3].src = "images/DesertTile.png";
-tiles[3].enterable = true;
-tiles[3].blocksView = false;
-tiles[4] = new Image();
-tiles[4].src = "images/DownStairTile.png";
-tiles[4].enterable = true;
-tiles[4].blocksView = false;
-tiles[5] = new Image();
-tiles[5].src = "images/FloorTileDebug.png";
-tiles[5].enterable = true;
-tiles[5].blocksView = false;
-tiles.width = 108;
-tiles.height = 54;
-
 /*
+ *  Isoventure - Github Game Off Entry. 
+ *  Copyright Tom Jones jones@sdf.org @adventureloop 
+ *
+ */
 
-var tileMap = [[2,2,2,2,0,0,2,2,2],[1,1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1,1],					[1,1,1,1,1,1,1,1,1],[1,1,1,1,0,0,1,1,1],[1,1,1,1,0,0,1,1,1]];
-*/
-
-var tileMap = [[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],				[3,3,3,3,3,3,3,4,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],
-[3,3,3,3,3,3,3,3,3]];
-
-/*
-var tileMap = [[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],				[5,5,5,5,5,5,5,4,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],
-[5,5,5,5,5,5,5,5,5]];
-*/
-tileMap.width = tileMap.length;
-tileMap.height = tileMap[0].length;
 
 var player;
 var game;
@@ -250,6 +217,53 @@ function TileMap(tiles,tileMap)
 			}
 		}
 		//console.log("Clicked tile (" + x + "," + y + ")");
+	}
+}
+
+function TileMapLoader()
+{
+	this.staticTileMap = function()
+	{
+		var tiles = [];
+		tiles[0] = undefined;
+		tiles[1] = new Image();
+		tiles[1].blocksView = false;
+		tiles[2] = new Image();
+		tiles[2].src = "images/WallCube.png";
+		tiles[2].enterable = false;
+		tiles[2].blocksView = true;
+		tiles[3] = new Image();
+		tiles[3].src = "images/DesertTile.png";
+		tiles[3].enterable = true;
+		tiles[3].blocksView = false;
+		tiles[4] = new Image();
+		tiles[4].src = "images/DownStairTile.png";
+		tiles[4].enterable = true;
+		tiles[4].blocksView = false;
+		tiles[5] = new Image();
+		tiles[5].src = "images/FloorTileDebug.png";
+		tiles[5].enterable = true;
+		tiles[5].blocksView = false;
+		tiles.width = 108;
+		tiles.height = 54;
+		
+		var tileMap = [];
+
+		/*
+
+		var tileMap = [[2,2,2,2,0,0,2,2,2],[1,1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1,1],					[1,1,1,1,1,1,1,1,1],[1,1,1,1,0,0,1,1,1],[1,1,1,1,0,0,1,1,1]];
+		*/
+
+		var tileMap = [[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],				[3,3,3,3,3,3,3,4,3],[3,3,3,3,3,3,3,3,3],[3,3,3,3,3,3,3,3,3],
+			[3,3,3,3,3,3,3,3,3]];
+
+		/*
+		var tileMap = [[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],				[5,5,5,5,5,5,5,4,5],[5,5,5,5,5,5,5,5,5],[5,5,5,5,5,5,5,5,5],
+				[5,5,5,5,5,5,5,5,5]];
+		*/
+		tileMap.width = tileMap.length;
+		tileMap.height = tileMap[0].length;
+		return new TileMap(tiles,tileMap);
 	}
 }
 
@@ -536,7 +550,7 @@ function Game(width,height,debugWidth,debugHeight)
     this.latestFPS = 0;
     this.fps = 0;
 
-    this.tileMap = new TileMap(tiles,tileMap);
+    this.tileMap = (new TileMapLoader).staticTileMap();
     this.tileMap.debug = true;
 
     this.debug = new Debug(debugWidth,debugHeight,this.tileMap);
