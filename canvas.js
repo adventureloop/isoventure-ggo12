@@ -485,6 +485,16 @@ function createPlayer(tileMap)
 	return p;
 }
 
+
+function createEnemy(tileMap,x,y)
+{
+	var e = new Entity(tileMap,x,y);
+	e.speed = 15;
+	e.life = 10;
+    e.addComponent(headToComponent);
+    e.addComponent(generateRandomDest);
+    return e;
+}
 function headToComponent(delta,entity)
 {
 
@@ -583,12 +593,7 @@ function Game(width,height,debugWidth,debugHeight)
 	var entities = [];
 
   	for(var i = 1;i < 4;i++) {
-      	var e = new Entity(this.tileMap,i+2,6);
-		e.speed = 15;
-		e.life = 10;
-      	e.addComponent(headToComponent);
-      	e.addComponent(generateRandomDest);
-      	entities.push(e);
+      	entities.push(createEnemy(this.tileMap,i+2,6));
   	}
 
 	frames = [{width:64,height:64,x:0,y:0}];
