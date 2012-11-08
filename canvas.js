@@ -192,7 +192,7 @@ function TileMap(tiles,tileMap)
 	
 	this.clicked = function(x,y)
 	{
-		console.log("Checking  x: " + x + " y: " + y);
+		//console.log("Checking  x: " + x + " y: " + y);
 		//We need to undo the isometric conversion to get real (x,y) coords
 		//each tiles is 54x108 as a real screen image.	
 		var width = this.tiles.width;
@@ -204,7 +204,7 @@ function TileMap(tiles,tileMap)
 				var ypos = (i * height / 2) - (j * height / 2);
 
 				if((x > xpos && x < xpos + 108) && (y > ypos+54 && y < ypos + 108)) {
-					console.log("Hit tile (" + i + "," + j + ")");
+					//console.log("Hit tile (" + i + "," + j + ")");
 					//Return the first tile hit, DEBUG this later
 					return {tileX:i,tileY:j,tileXPos:54,tileYPos:54};
 				}
@@ -463,7 +463,11 @@ function Entity(tileMap,tileX,tileY)
 									(this.tileX * this.tileWidth / 2);
 		var screenY = (this.tileX * this.tileHeight / 2) - 
 									(this.tileY * this.tileHeight / 2);			
-		
+
+		//Having these coordinates fixes a jump between tiles, I do not know why
+		screenX /= 2;	
+		screenY /= 2;	
+
 		screenX += screenX + (this.tileXPos + this.tileYPos);
 		screenY += screenY + ((this.tileXPos - this.tileYPos) / 2 + 0.0);	
 		
@@ -772,7 +776,7 @@ function Game(width,height,debugWidth,debugHeight)
 		y -= this.translateY;
 		
 		var tile = this.tileMap.clicked(x,y);
-		console.log(tile);
+		//console.log(tile);
 
       	switch(button) 
         {
