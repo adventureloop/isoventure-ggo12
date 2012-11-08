@@ -365,11 +365,11 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.collidesWithEntity = function(entity)
 	{		
-		var mypos = this.screenPosition();
+		var mypos = this.worldPosition();
 		var x = mypos.x;
 		var y = mypos.y;		
 		
-		var enpos = entity.screenPosition();
+		var enpos = entity.worldPosition();
 		var enX = enpos.x;
 		var enY = enpos.y;
 		
@@ -458,8 +458,12 @@ function Entity(tileMap,tileX,tileY)
 		this.life--;
 	}
 	
-	this.worldCoords = function()
+	this.worldPosition = function()
 	{
+		var xpos = (this.tileX * this.tileMap.getWidth()) + this.tileXPos;
+		var ypos = (this.tileY * this.tileMap.getWidth()) + this.tileYPos;
+
+		return {x:xpos,y:ypos};
 	}
 	
 	this.screenPosition = function()
@@ -709,7 +713,8 @@ function Game(width,height,debugWidth,debugHeight)
 		
 		//Center the player in the screen
 		this.translateX = 0;
-		this.translateY = 0; I need to calculate a centering box around the player which varies which moves as he approaches the edge.
+		this.translateY = 0;
+		// I need to calculate a centering box around the player which varies which moves as he approaches the edge.
 		
 		
         this.draw();
