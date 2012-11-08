@@ -495,6 +495,23 @@ function createEnemy(tileMap,x,y)
     e.addComponent(generateRandomDest);
     return e;
 }
+
+function createBullet(tileMap,dest,x,y)
+{
+	var sprite = new Image();
+	sprite.src = "images/bullet.png";
+
+	var frames = [{width:5,height:5,x:11,y:11}]
+
+	var b = new Entity(tileMap,player.tileX,player.tileY);
+	b.tileXPos = player.tileXPos;
+	b.tileYPos = player.tileYPos;
+	b.addAnimation(new Animation(0,sprite,frames));
+	b.addComponent(headAlongVector);
+	b.setDest(dest);
+	b.speed = 200;
+	return b;
+}
 function headToComponent(delta,entity)
 {
 
@@ -723,13 +740,10 @@ function Game(width,height,debugWidth,debugHeight)
     								
 	this.clicked = function(button,x,y)
 	{
-		console.log(" button " + button + " x: " + x + " y: " + y);
-		
 		//Undo screen centering
 		x -= this.translateX;
 		y -= this.translateY;
 		
-//		console.log("Checking " + button + " x: " + x + " y: " + y);
 		var tile = this.tileMap.clicked(x,y);
 		console.log(tile);
 
@@ -740,21 +754,7 @@ function Game(width,height,debugWidth,debugHeight)
          	break;
         case 3:
             //Add new bullet in direction
-			console.log("Adding bullet");
-			var bsprite = new Image();
-			bsprite.src = "images/bullet.png";
-
-			var bframes = [{width:5,height:5,x:11,y:11}]
-
-			var b = new Entity(this.tileMap,player.tileX,
-												player.tileY);
-			b.tileXPos = player.tileXPos;
-			b.tileYPos = player.tileYPos;
-			b.addAnimation(new Animation(0,bsprite,bframes));
-			b.addComponent(headAlongVector);
-			b.setDest(tile);
-			b.speed = 200;
-			bullets.push(b);
+			bullets.push(createBullet(this.tileMap,tile,player.tileX,player.tileY));
             break;
         default:
             break;
