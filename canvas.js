@@ -615,7 +615,7 @@ function Game(width,height,debugWidth,debugHeight)
 	this.width = width;
 	this.height = height;
 	this.translateX = 0;
-	this.translateY = 160;
+	this.translateY = 0;
 
 	this.lastUpdateTime = 0;
     this.lastFpsTime = 0;
