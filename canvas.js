@@ -715,7 +715,7 @@ function Game(width,height,debugWidth,debugHeight)
             //Add new bullet in direction
 			console.log("Adding bullet");
 			var bsprite = new Image();
-			bsprite.src = "images/Shot.png";
+			bsprite.src = "images/bullet.png";
 
 			var bframes = [{width:5,height:5,x:11,y:11}]
 
