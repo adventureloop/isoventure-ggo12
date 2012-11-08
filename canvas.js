@@ -464,6 +464,27 @@ function Entity(tileMap,tileX,tileY)
 	};
 }
 
+function createPlayer(tileMap)
+{
+	var sprite = new Image();
+    sprite.src = "images/BaseSpriteSheet.png";
+
+	var frames = [{width:64,height:64,x:0,y:0},
+				{width:64,height:64,x:64,y:0},
+				{width:64,height:64,x:128,y:0},
+				{width:64,height:64,x:64,y:0}
+				];
+
+	var p = new Entity(tileMap,0,0);
+	p.addAnimation(new Animation(200,sprite,frames));
+	p.life = 20;
+	p.player = true;
+	p.addComponent(headToComponent);
+	//player.addComponent(headAlongVector);
+	
+	return p;
+}
+
 function headToComponent(delta,entity)
 {
 
@@ -537,6 +558,7 @@ function headAlongVector(delta,entity)
 	if(entity.xmove !== undefined && entity.ymove !== undefined) 
 		entity.move(entity.xmove,entity.ymove);
 }
+
 function Game(width,height,debugWidth,debugHeight) 
 {
 	this.width = width;
@@ -554,23 +576,9 @@ function Game(width,height,debugWidth,debugHeight)
     this.tileMap.debug = true;
 
     this.debug = new Debug(debugWidth,debugHeight,this.tileMap);
-
-    var sprite = new Image();
-    sprite.src = "images/BaseSpriteSheet.png";
-
-	var frames = [{width:64,height:64,x:0,y:0},
-				{width:64,height:64,x:64,y:0},
-				{width:64,height:64,x:128,y:0},
-				{width:64,height:64,x:64,y:0}
-				];
-
-	player = new Entity(this.tileMap,0,0);
-	player.addAnimation(new Animation(200,sprite,frames));
-	player.life = 20;
-	player.player = true;
-	player.addComponent(headToComponent);
-	//player.addComponent(headAlongVector);
-
+	
+	player = createPlayer(this.tileMap);
+	
 	var bullets = [];
 	var entities = [];
 
