@@ -241,9 +241,13 @@ function TileMapLoader()
 		tiles[4].enterable = true;
 		tiles[4].blocksView = false;
 		tiles[5] = new Image();
-		tiles[5].src = "images/FloorTileDebug.png";
+		tiles[5].src = "images/FloorTile.png";
 		tiles[5].enterable = true;
 		tiles[5].blocksView = false;
+		tiles[6] = new Image();
+		tiles[6].src = "images/FloorTileDebug.png";
+		tiles[6].enterable = true;
+		tiles[6].blocksView = false;
 		tiles.width = 108;
 		tiles.height = 54;
 		
@@ -267,9 +271,16 @@ function TileMapLoader()
 	this.generateTileMap = function(width,height)
 	{
 		var tileMap = [];
-		for(var i = 0;i< width;i++)
-			for(var j = 0;j < height;j++)
-				tileMap.push(1);
+		for(var i = 0;i< width;i++) {
+			var tmp = [];
+			for(var j = 0;j < height;j++) {
+				tmp.push(3);
+			}
+			tileMap.push(tmp);
+		}
+		tileMap.width = tileMap.length;
+		tileMap.height = tileMap[0].length;
+		return new TileMap(this.loadTiles(),tileMap);
 	}
 }
 
@@ -605,7 +616,8 @@ function Game(width,height,debugWidth,debugHeight)
     this.latestFPS = 0;
     this.fps = 0;
 
-    this.tileMap = (new TileMapLoader).staticTileMap();
+    //this.tileMap = (new TileMapLoader).staticTileMap();
+	this.tileMap = (new TileMapLoader).generateTileMap(10,10);
     this.tileMap.debug = true;
 
     this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
@@ -779,7 +791,7 @@ function TileMapEditor(width,height,tileMap)
 
 	this.tileMap = tileMap;
 	
-	this.colours = ["rgba(0,0,0,0.1)","green","red","orange","cyan","blue"];
+	this.colours = ["rgba(0,0,0,0.1)","green","red","orange","cyan","blue","yellow"];
 	
 	this.draw = function()
 	{
