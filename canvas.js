@@ -3,8 +3,6 @@
  *  Copyright Tom Jones jones@sdf.org @adventureloop 
  *
  */
-
-
 var player;
 var game;
 var ctx;
@@ -32,8 +30,6 @@ function init()
 	document.getElementById('editor').onmousedown = mouse;	
 	
 	setInterval(function(){game.run();},FPS); //Wrapped in an anon func, to stop the scope on run changing
-	//setInterval(game.run,1000);
-	//game.run();
 }
 
 function mouse(e)
@@ -180,25 +176,23 @@ function TileMap(tiles,tileMap)
 				ctx.restore();
 			}
 		}
-	}
+	};
 	
 	this.tileIndex = function(x,y) 
 	{
 		return this.tileMap[x][y];
-	}
+	};
 	
 	this.changeTile = function(x,y)
 	{
 		this.tileMap[x][y]++;
 		if(this.tileMap[x][y] > tiles.length-1)
 			this.tileMap[x][y] = 0;
-	}
+	};
 	
 	this.clicked = function(x,y)
 	{
 		console.log("Checking  x: " + x + " y: " + y);
-		//x = (x / (this.tiles.width/2));
-		//y = (y/(this.tiles.width/4));
 		//We need to undo the isometric conversion to get real (x,y) coords
 		//each tiles is 54x108 as a real screen image.	
 		var width = this.tiles.width;
@@ -216,8 +210,7 @@ function TileMap(tiles,tileMap)
 				}
 			}
 		}
-		//console.log("Clicked tile (" + x + "," + y + ")");
-	}
+	};
 }
 
 function TileMapLoader()
@@ -252,7 +245,7 @@ function TileMapLoader()
 		tiles.height = 54;
 		
 		return tiles;
-	}
+	};
 
 	this.staticTileMap = function() 
 	{
@@ -266,7 +259,7 @@ function TileMapLoader()
 		tileMap.width = tileMap.length;
 		tileMap.height = tileMap[0].length;
 		return new TileMap(tiles,tileMap);
-	}
+	};
 	
 	this.generateTileMap = function(width,height)
 	{
@@ -281,7 +274,7 @@ function TileMapLoader()
 		tileMap.width = tileMap.length;
 		tileMap.height = tileMap[0].length;
 		return new TileMap(this.loadTiles(),tileMap);
-	}
+	};
 }
 
 function Animation(animationInterval,sprite,frames)
@@ -317,13 +310,11 @@ function Animation(animationInterval,sprite,frames)
 	this.draw = function()
 	{
 		var frame = this.frames[this.currentFrame];
-		//console.log("Current frame: " + frame);
 
 		ctx.drawImage(this.sprite,frame.x,frame.y,
 										frame.width,frame.height,-25,20,
 										frame.width,frame.height);
 
-	//	ctx.drawImage(this.sprite,0,0,64,64,0,0,64,64);
 	};
 
   	this.stop = function()
@@ -456,7 +447,7 @@ function Entity(tileMap,tileX,tileY)
 	this.hit = function()
 	{
 		this.life--;
-	}
+	};
 	
 	this.worldPosition = function()
 	{
@@ -464,7 +455,7 @@ function Entity(tileMap,tileX,tileY)
 		var ypos = (this.tileY * this.tileMap.getWidth()) + this.tileYPos;
 
 		return {x:xpos,y:ypos};
-	}
+	};
 	
 	this.screenPosition = function()
 	{
@@ -477,7 +468,7 @@ function Entity(tileMap,tileX,tileY)
 		screenY += screenY + ((this.tileXPos - this.tileYPos) / 2 + 0.0);	
 		
 		return {x:screenX,y:screenY};
-	}
+	};
 	
 	this.addComponent = function(component)
 	{
@@ -506,7 +497,6 @@ function createPlayer(tileMap)
 	p.life = 20;
 	p.player = true;
 	p.addComponent(headToComponent);
-	//player.addComponent(headAlongVector);
 	
 	return p;
 }
@@ -538,6 +528,7 @@ function createBullet(tileMap,dest,x,y)
 	b.speed = 200;
 	return b;
 }
+
 function headToComponent(delta,entity)
 {
 
@@ -577,7 +568,10 @@ function headToComponent(delta,entity)
 function generateRandomDest(delta,entity)
 {
   	if(entity.dest === undefined) {
-      entity.setDest({tileX:Math.floor(Math.random()*8),tileY:Math.floor(Math.random()*8),tileXPos:0,tileYPos:0});
+      entity.setDest({tileX:Math.floor(Math.random()*8),
+	  					tileY:Math.floor(Math.random()*8),	
+						tileXPos:0,
+						tileYPos:0});
   	}
 
 }
@@ -680,7 +674,6 @@ function Game(width,height,debugWidth,debugHeight)
 		for(var i = 0;i < entities.length;i++) {
 			if(player.collidesWithEntity(entities[i])) {
 				player.hit();
-				//entities[i].hit();				
 			}				
 		}
 
@@ -715,8 +708,6 @@ function Game(width,height,debugWidth,debugHeight)
 		this.translateX = 0;
 		this.translateY = 0;
 		// I need to calculate a centering box around the player which varies which moves as he approaches the edge.
-		
-		
         this.draw();
 	};
 	
@@ -748,9 +739,7 @@ function Game(width,height,debugWidth,debugHeight)
 		//Position the tilemap
 		ctx.translate(this.translateX,this.translateY);			
 		
-		//entities.push(player);
 		this.tileMap.drawTileMap(entities);
-		//entities.pop;
 		player.draw();
 		
 		for(var i = 0;i < bullets.length;i++) {
@@ -768,8 +757,9 @@ function Game(width,height,debugWidth,debugHeight)
 						now.getDate(),now.getHours(),now.getMinutes(),
 												now.getSeconds(),now.getMilliseconds() );
 	};
-    this.lastLoopTime = this.getTime(); //Initialise lastloop time here to avoid getting a massive
-    									//delta on the first run
+	//Initialise lastloop time here to avoid getting a massive
+   	//delta on the first run
+    this.lastLoopTime = this.getTime(); 
     									
     								
 	this.clicked = function(button,x,y)
@@ -821,7 +811,7 @@ function TileMapEditor(width,height,tileMap)
 		var height = this.tileMap.tileMap.height;
 		
 		debugCtx.fillStyle = "rgba(0,0,0,0.1)";
-		debugCtx.fillRect(0,0,(length * (width+this.offset))-this.offset,(height * (width+this.offset))-this.offset);//length,height);
+		debugCtx.fillRect(0,0,(length * (width+this.offset))-this.offset,(height * (width+this.offset))-this.offset);
 				
 
 		for (var i = 0; i < length; i++) {
@@ -839,7 +829,7 @@ function TileMapEditor(width,height,tileMap)
 		    }
 		}
 		debugCtx.restore();
-	}
+	};
 	
 	this.clicked = function(button,x,y)
 	{
@@ -851,5 +841,5 @@ function TileMapEditor(width,height,tileMap)
 		y = Math.floor(y/(10+5));
         
         this.tileMap.changeTile(x,y);
-	}
+	};
 }
