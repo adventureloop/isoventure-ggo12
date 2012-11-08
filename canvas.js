@@ -510,7 +510,7 @@ function createEnemy(tileMap,x,y)
 {
 	var e = new Entity(tileMap,x,y);
 	e.speed = 15;
-	e.life = 10;
+	e.life = 2;
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
     return e;
