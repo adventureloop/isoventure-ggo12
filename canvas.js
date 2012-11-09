@@ -161,6 +161,13 @@ function TileMap(tiles,tileMap)
 		tile = tiles[this.tileMap[tileX][tileY]];	//DEBUG error where tile cannot be found happens here.
 		if(tile == undefined || !tile.enterable)
 			return false;
+			
+		//If there are any events for the tile we are in execute them
+		if(this.eventMap !== undefined) {
+			var events = this.eventMap[tileX][tileY];
+			for(var i = 0;i < events.length;i++)
+				events[i]();
+		}
 		return true;
 	};
 	
@@ -214,6 +221,24 @@ function TileMap(tiles,tileMap)
 				}
 			}
 		}
+	};
+	
+	this.addEventToTile = function(x,y,event) 
+	{
+		//If not already defined create a 3d array which matches the tileMap, where the 3rd dimension holds events.
+		if(this.eventMap === undefined) {
+			var width = this.tileMap.width;
+			var height = this.tileMap.height;
+			this.eventMap = []
+			for(var i = 0;i< width;i++) {
+				var tmp = [];
+				for(var j = 0;j < height;j++) {
+					tmp.push([]);
+				}
+				this.eventMap.push(tmp);
+			}
+		}
+		this.eventMap[x][y].push(event);
 	};
 }
 
@@ -700,6 +725,11 @@ function Game(width,height,debugWidth,debugHeight)
 		this.tileMap = (new TileMapLoader).generateTileMap(10,10);
 		this.tileMap.debug = true;
 
+		this.tileMap.addEventToTile(5,5,function(){ 
+			
+			if(player.tileX == 5 && player.tileY == 5)
+				game.state = "game over";
+			});
 		this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
 	
 		player = createPlayer(this.tileMap);
@@ -713,7 +743,6 @@ function Game(width,height,debugWidth,debugHeight)
 		
 		var e = createEnemy(this.tileMap,1,1);
 		e.clearComponents();
-		e.speed = 80;
 		e.addComponent(pathFollowerComponent);
 		e.addComponent(headToComponent);
 		entities.push(e);
