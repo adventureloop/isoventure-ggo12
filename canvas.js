@@ -158,7 +158,7 @@ function TileMap(tiles,tileMap)
 		if(tileY < 0 || tileY >= this.tileMap[0].length)
 			return false;
 			
-		tile = tiles[this.tileMap[tileX][tileY]];
+		tile = tiles[this.tileMap[tileX][tileY]];	//DEBUG error where tile cannot be found happens here.
 		if(tile == undefined || !tile.enterable)
 			return false;
 		return true;
@@ -483,6 +483,11 @@ function Entity(tileMap,tileX,tileY)
 		this.components.push(component);
 	};
 	
+	this.clearComponents = function()
+	{
+		this.components = [];
+	};
+	
 	this.setDest = function(dest)
 	{
 		this.dest = dest;
@@ -579,6 +584,28 @@ function headToComponent(delta,entity)
     }
 }
 
+function pathFollowerComponent(delta,entity)
+{
+	if(entity.path === undefined) {
+		var path = [];
+		path.push({tileX:0,tileY:0,tileXPos:0,tileYPos:0});
+		path.push({tileX:9,tileY:0,tileXPos:0,tileYPos:0});
+		path.push({tileX:9,tileY:9,tileXPos:0,tileYPos:0});
+		path.push({tileX:0,tileY:9,tileXPos:0,tileYPos:0});
+		
+		entity.path = path;
+		entity.pathIndex = 0;
+	}
+	
+	if(entity.dest === undefined) {
+		entity.setDest(entity.path[entity.pathIndex]);
+		if(entity.pathIndex > entity.path.length)
+			entity.pathIndex = 0;
+		else
+			entity.pathIndex++;
+	}
+}
+
 function generateRandomDest(delta,entity)
 {
   	if(entity.dest === undefined) {
@@ -637,20 +664,6 @@ function Game(width,height,debugWidth,debugHeight)
 	
 	var bullets = [];
 	var entities = [];
-  /*  //this.tileMap = (new TileMapLoader).staticTileMap();
-	this.tileMap = (new TileMapLoader).generateTileMap(10,10);
-    this.tileMap.debug = true;
-
-    this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
-	
-	player = createPlayer(this.tileMap);
-	
-	var bullets = [];
-	var entities = [];
-
-  	for(var i = 1;i < 4;i++) {
-      	entities.push(createEnemy(this.tileMap,i+2,6));
-  	}*/
 	
 	this.run = function()
 	{
@@ -697,6 +710,13 @@ function Game(width,height,debugWidth,debugHeight)
 		for(var i = 1;i < 4;i++) {
 			entities.push(createEnemy(this.tileMap,i+2,6));
 		}
+		
+		var e = createEnemy(this.tileMap,1,1);
+		e.clearComponents();
+		e.speed = 80;
+		e.addComponent(pathFollowerComponent);
+		e.addComponent(headToComponent);
+		entities.push(e);
 		
 		this.state = "running";
 	};
