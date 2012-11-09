@@ -87,6 +87,10 @@ function keyboard()
 		case 80:
 			console.log("Player position tile:(" + player.tileX + "," + player.tileY + ")"); 
 			break;
+		case 82:
+			console.log("Restarting game");
+			game.state = "starting";
+			break;
 		default:
 			console.log("That was not an arrow key " + window.event.which);
 			break;
@@ -513,6 +517,12 @@ function createEnemy(tileMap,x,y)
 	e.life = 2;
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
+	
+	var frames = [{width:64,height:64,x:0,y:0}];
+	var esprite = new Image();
+	esprite.src = "images/SpriteShooting.png";
+
+	e.addAnimation(new Animation(0,esprite,frames));
     return e;
 }
 
@@ -623,9 +633,11 @@ function Game(width,height,debugWidth,debugHeight)
     this.latestFPS = 0;
     this.fps = 0;
 
-	this.state = "running";		//Manage the flow of the game, States: running,paused,gameover
+	this.state = "starting";		//Manage the flow of the game, States: running,paused,gameover
 	
-    //this.tileMap = (new TileMapLoader).staticTileMap();
+	var bullets = [];
+	var entities = [];
+  /*  //this.tileMap = (new TileMapLoader).staticTileMap();
 	this.tileMap = (new TileMapLoader).generateTileMap(10,10);
     this.tileMap.debug = true;
 
@@ -638,15 +650,8 @@ function Game(width,height,debugWidth,debugHeight)
 
   	for(var i = 1;i < 4;i++) {
       	entities.push(createEnemy(this.tileMap,i+2,6));
-  	}
-
-	frames = [{width:64,height:64,x:0,y:0}];
-	var esprite = new Image();
-	esprite.src = "images/SpriteShooting.png";
+  	}*/
 	
-	for(var i = 0;i < entities.length;i++) 
-		entities[i].addAnimation(new Animation(0,esprite,frames));
-    
 	this.run = function()
 	{
         // work out how long its been since the last update, this
@@ -669,8 +674,39 @@ function Game(width,height,debugWidth,debugHeight)
 		this.draw();
 	};
 	
+	this.loadLevel = function()
+	{
+		//Clear out values in case this is a reset
+		player = undefined;
+		entities = undefined;
+		bullets = undefined;
+		this.tileMap = undefined;
+		this.mapEditor = undefined;
+		
+		//this.tileMap = (new TileMapLoader).staticTileMap();
+		this.tileMap = (new TileMapLoader).generateTileMap(10,10);
+		this.tileMap.debug = true;
+
+		this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
+	
+		player = createPlayer(this.tileMap);
+	
+		bullets = [];
+		entities = [];
+
+		for(var i = 1;i < 4;i++) {
+			entities.push(createEnemy(this.tileMap,i+2,6));
+		}
+		
+		this.state = "running";
+	};
+	
 	this.updateWithDelta = function(delta) 
 	{
+		if(this.state === "starting") {
+			this.loadLevel();
+			return;
+		}
 		if(this.state === "running") {
 			player.updateWithDelta(delta);
 	
@@ -734,6 +770,8 @@ function Game(width,height,debugWidth,debugHeight)
        
 			if(player.life < 1)
 				this.state = "game over";
+			if(entities.length === 0)
+				this.state = "game over";
 		}
 	};
 	
@@ -741,18 +779,20 @@ function Game(width,height,debugWidth,debugHeight)
 	{
 		ctx.clearRect(0,0,this.width,this.height); // clear canvas
 		
-		ctx.save();		
+		if(this.state !== "starting") {
+			ctx.save();		
 		
-		//Position the tilemap
-		ctx.translate(this.translateX,this.translateY);			
+			//Position the tilemap
+			ctx.translate(this.translateX,this.translateY);			
 		
-		this.tileMap.drawTileMap(entities);
-		player.draw();
+			this.tileMap.drawTileMap(entities);
+			player.draw();
 		
-		for(var i = 0;i < bullets.length;i++) {
-			bullets[i].draw();				
+			for(var i = 0;i < bullets.length;i++) {
+				bullets[i].draw();				
+			}
+			ctx.restore();
 		}
-		ctx.restore();
 		
 		ctx.strokeText("FPS: " + this.latestFPS,2,10);
 		ctx.strokeText("BUILD: Clicking game",
@@ -774,6 +814,19 @@ function Game(width,height,debugWidth,debugHeight)
 			ctx.font = "italic 20px Arial";
 			ctx.fillStyle = "rgb(0,255,0)";
 			ctx.fillText("Press 'r' to restart",this.width/2-75,this.height/2+25);
+			
+			ctx.restore();
+		}
+		
+		if(this.state == "starting") {
+			ctx.save();
+			
+			ctx.fillStyle = "rgba(0,0,0,0.5)";
+			ctx.fillRect(0,0,this.width,this.height);
+			
+			ctx.font = "italic 40px Arial";
+			ctx.fillStyle = "rgba(255,255,255,0.4)";
+			ctx.fillText("loading...",this.width/2-100,this.height/2);
 			
 			ctx.restore();
 		}
