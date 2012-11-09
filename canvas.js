@@ -623,6 +623,8 @@ function Game(width,height,debugWidth,debugHeight)
     this.latestFPS = 0;
     this.fps = 0;
 
+	this.state = "running";		//Manage the flow of the game, States: running,paused,gameover
+	
     //this.tileMap = (new TileMapLoader).staticTileMap();
 	this.tileMap = (new TileMapLoader).generateTileMap(10,10);
     this.tileMap.debug = true;
@@ -669,66 +671,70 @@ function Game(width,height,debugWidth,debugHeight)
 	
 	this.updateWithDelta = function(delta) 
 	{
-		player.updateWithDelta(delta);
+		if(this.state === "running") {
+			player.updateWithDelta(delta);
 	
-		for(var i = 0;i < entities.length;i++) {
-			entities[i].updateWithDelta(delta);				
-		}
+			for(var i = 0;i < entities.length;i++) {
+				entities[i].updateWithDelta(delta);				
+			}
 
-		for(var i = 0;i < bullets.length;i++) {
-			bullets[i].updateWithDelta(delta);				
-		}
+			for(var i = 0;i < bullets.length;i++) {
+				bullets[i].updateWithDelta(delta);				
+			}
 
-        //Control the game now   
-        for(var i = 0;i < entities.length;i++) {
-			var e = entities[i];
-			if(!this.tileMap.validTilePos(e.tileX,e.tileY))
-	    		e.unmove();
-        }
+			//Control the game now   
+			for(var i = 0;i < entities.length;i++) {
+				var e = entities[i];
+				if(!this.tileMap.validTilePos(e.tileX,e.tileY))
+					e.unmove();
+			}
         
-        if(!this.tileMap.validTilePos(player.tileX,player.tileY))
-		   	player.unmove();
+			if(!this.tileMap.validTilePos(player.tileX,player.tileY))
+				player.unmove();
 		   	
-		//Check for collision with the player and the enemy
-		for(var i = 0;i < entities.length;i++) {
-			if(player.collidesWithEntity(entities[i])) {
-				player.hit();
-			}				
-		}
+			//Check for collision with the player and the enemy
+			for(var i = 0;i < entities.length;i++) {
+				if(player.collidesWithEntity(entities[i])) {
+					player.hit();
+				}				
+			}
 
-		//Check whether bullets have hit enemy
-		for(var i = 0;i < bullets.length;i++) {
-			for(var j = 0;j < entities.length;j++)
-				if(bullets[i].collidesWithEntity(entities[j])) {
-					bullets[i].hit();
-					entities[j].hit();				
-			}				
-		}
+			//Check whether bullets have hit enemy
+			for(var i = 0;i < bullets.length;i++) {
+				for(var j = 0;j < entities.length;j++) {
+					if(bullets[i].collidesWithEntity(entities[j])) {
+						bullets[i].hit();
+						entities[j].hit();				
+					}	
+				}
+			}
 		
-		var tmp = []
-		//Remove any enemy that has 0 life left
-		for(var i = 0;i < entities.length;i++) {
-			if(entities[i].life > 0)
-				tmp.push(entities[i]);
-		}
+			var tmp = []
+			//Remove any enemy that has 0 life left
+			for(var i = 0;i < entities.length;i++) {
+				if(entities[i].life > 0)
+					tmp.push(entities[i]);
+			}
 		
-		entities = tmp;
-       	tmp = []; 
-		for(var i = 0;i < bullets.length;i++) {
-			var b = bullets[i];
-			if(!this.tileMap.validTilePos(b.tileX,b.tileY))
-				b.hit();
-			if(b.life > 0)
-				tmp.push(b);
-		}
-		bullets = tmp
+			entities = tmp;
+			tmp = []; 
+			for(var i = 0;i < bullets.length;i++) {
+				var b = bullets[i];
+				if(!this.tileMap.validTilePos(b.tileX,b.tileY))
+					b.hit();
+				if(b.life > 0)
+					tmp.push(b);
+			}
+			bullets = tmp
 		
-		//Center the player in the screen
-		var pos = player.screenPosition();
-		this.translateX = -pos.x+(this.width/2);
-		this.translateY = -pos.y+(this.height/2);
+			//Center the player in the screen
+			var pos = player.screenPosition();
+			this.translateX = -pos.x+(this.width/2);
+			this.translateY = -pos.y+(this.height/2);
        
-	  	//Render the scene
+			if(player.life < 1)
+				this.state = "game over";
+		}
 	};
 	
 	this.draw = function()
@@ -755,6 +761,23 @@ function Game(width,height,debugWidth,debugHeight)
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
 		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
 		
+		if(this.state == "game over") {
+			ctx.save();
+			
+			ctx.fillStyle = "rgba(0,0,0,0.5)";
+			ctx.fillRect(0,0,this.width,this.height);
+			
+			ctx.font = "italic 40px Arial";
+			ctx.fillStyle = "rgb(0,255,0)";
+			ctx.fillText("Game Over",this.width/2-100,this.height/2);
+			
+			ctx.font = "italic 20px Arial";
+			ctx.fillStyle = "rgb(0,255,0)";
+			ctx.fillText("Press 'r' to restart",this.width/2-75,this.height/2+25);
+			
+			ctx.restore();
+		}
+		
 		this.mapEditor.draw();
 	};
 	
@@ -778,19 +801,20 @@ function Game(width,height,debugWidth,debugHeight)
 		
 		var tile = this.tileMap.clicked(x,y);
 		//console.log(tile);
-
-      	switch(button) 
-        {
-        case 1:
-			player.setDest(tile);
-         	break;
-        case 3:
-            //Add new bullet in direction
-			bullets.push(createBullet(this.tileMap,tile,player.tileX,player.tileY));
-            break;
-        default:
-            break;
-        }
+		if(this.state === "running") {
+			switch(button) 
+			{
+			case 1:
+				player.setDest(tile);
+				break;
+			case 3:
+				//Add new bullet in direction
+				bullets.push(createBullet(this.tileMap,tile,player.tileX,player.tileY));
+				break;
+			default:
+				break;
+			}
+		}
 	} 
 }
 
