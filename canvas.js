@@ -402,7 +402,7 @@ function Entity(tileMap,tileX,tileY)
 	{
 		//Work around the sticking bug. This needs to be solved at the source [DEBUG]
 		if(isNaN(this.tileX) || isNaN(this.tileY) || isNaN(this.tileXPos) || isNaN(this.tileXPos)) {
-			console.log("Tile position has become Nan");
+			console.log("Tile position has become NaN");
 			this.unmove();
 		}
       	for(var i = 0;i < this.components.length;i++)
@@ -702,6 +702,10 @@ function Game(width,height,debugWidth,debugHeight)
 	var bullets = [];
 	var entities = [];
 	
+	var maxLevel = 2;
+	var currentLevel = 1;
+	this.mapLoader = new TileMapLoader();
+
 	this.run = function()
 	{
         // work out how long its been since the last update, this
@@ -734,16 +738,28 @@ function Game(width,height,debugWidth,debugHeight)
 		this.mapEditor = undefined;
 		
 		//this.tileMap = (new TileMapLoader).staticTileMap();
-		this.tileMap = (new TileMapLoader).generateTileMap(10,10);	//Cannot enter tiles tileX > 9
-		this.tileMap.debug = true;
-
-		this.tileMap.tileMap[5][5] = 4;
-		this.tileMap.addEventToTile(5,5,function(){ 
+		console.log("Current level is " + currentLevel);
+		switch(currentLevel) {
+			case 1:
+				this.tileMap = this.mapLoader.generateTileMap(10,10);		
+				this.tileMap.tileMap[5][5] = 4;
+				this.tileMap.addEventToTile(5,5,function(){ 
 			
-			if(player.tileX == 5 && player.tileY == 5)
-				game.state = "game over";
-			});
-		this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
+				if(player.tileX == 5 && player.tileY == 5)
+					game.state = "level complete";
+					currentLevel = 2;
+				});
+				break;
+			case 2:
+				this.tileMap = this.mapLoader.generateTileMap(15,15);		
+				break;
+			default:
+				break;
+		}
+		//Cannot enter tiles tileX > 9
+		//this.tileMap.debug = true;
+
+		//this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
 	
 		player = createPlayer(this.tileMap);
 	
@@ -832,8 +848,8 @@ function Game(width,height,debugWidth,debugHeight)
        
 			if(player.life < 1)
 				this.state = "game over";
-			if(entities.length === 0)
-				this.state = "game over";
+		//	if(entities.length === 0)
+		//		this.state = "game over";
 		}
 	};
 	
@@ -870,12 +886,29 @@ function Game(width,height,debugWidth,debugHeight)
 			ctx.fillRect(0,0,this.width,this.height);
 			
 			ctx.font = "italic 40px Arial";
-			ctx.fillStyle = "rgb(0,255,0)";
+			ctx.fillStyle = "rgb(255,0,0)";
 			ctx.fillText("Game Over",this.width/2-100,this.height/2);
 			
 			ctx.font = "italic 20px Arial";
-			ctx.fillStyle = "rgb(0,255,0)";
+			ctx.fillStyle = "rgb(255,0,0)";
 			ctx.fillText("Press 'r' to restart",this.width/2-75,this.height/2+25);
+			
+			ctx.restore();
+		}
+
+		if(this.state == "level complete") {
+			ctx.save();
+			
+			ctx.fillStyle = "rgba(0,0,0,0.5)";
+			ctx.fillRect(0,0,this.width,this.height);
+			
+			ctx.font = "italic 40px Arial";
+			ctx.fillStyle = "rgb(0,255,0)";
+			ctx.fillText("Level Complete",this.width/2-100,this.height/2);
+			
+			ctx.font = "italic 20px Arial";
+			ctx.fillStyle = "rgb(0,255,0)";
+			ctx.fillText("Press 'r' for the next level",this.width/2-75,this.height/2+25);
 			
 			ctx.restore();
 		}
@@ -893,7 +926,8 @@ function Game(width,height,debugWidth,debugHeight)
 			ctx.restore();
 		}
 		
-		this.mapEditor.draw();
+		if(this.mapEditor !== undefined)
+			this.mapEditor.draw();
 	};
 	
 	this.getTime = function()
