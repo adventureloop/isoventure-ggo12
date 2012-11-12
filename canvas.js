@@ -424,7 +424,7 @@ function Entity(tileMap,tileX,tileY)
 			
 		ctx.restore();
 		
-		drawHitBoxComponent(0,this)
+		//drawHitBoxComponent(0,this)
 	};
 	
 	this.addAnimation = function(animation)
@@ -560,7 +560,7 @@ function createBullet(tileMap,dest,x,y)
 	var sprite = new Image();
 	sprite.src = "images/bullet.png";
 
-	var frames = [{width:5,height:5,x:11,y:11,xshift:-25,yshift:20}]
+	var frames = [{width:5,height:5,x:11,y:11,xshift:5,yshift:50}]
 
 	var b = new Entity(tileMap,player.tileX,player.tileY);
 	b.tileXPos = player.tileXPos;
