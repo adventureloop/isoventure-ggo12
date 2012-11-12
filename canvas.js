@@ -422,6 +422,8 @@ function Entity(tileMap,tileX,tileY)
 			this.currentAnimation.draw();
 			
 		ctx.restore();
+		
+		drawHitBoxComponent(0,this)
 	};
 	
 	this.addAnimation = function(animation)
@@ -542,7 +544,7 @@ function createEnemy(tileMap,x,y)
 	e.life = 2;
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
-	e.addComponent(drawHitBoxComponent);
+	//e.addComponent(drawHitBoxComponent);
 	
 	var frames = [{width:64,height:64,x:0,y:0}];
 	var esprite = new Image();
@@ -629,7 +631,7 @@ function pathFollowerComponent(delta,entity)
 
 function drawHitBoxComponent(delta,entity)
 {
-	console.log("Drawing hit box");
+	//console.log("Drawing hit box");
 	ctx.save();
 	
 	var screenPos = entity.screenPosition();
@@ -637,9 +639,9 @@ function drawHitBoxComponent(delta,entity)
 	
 	ctx.strokeStyle = "rgb(1.0,0.0,0.0)";
 	ctx.beginPath();
-	ctx.arc(0,0,25,0*Math.PI,2*Math.PI);
-	ctx.stroke();
+	ctx.arc(0,0,12.5,0*Math.PI,2*Math.PI);
 	ctx.restore();
+	ctx.stroke();
 }
 function generateRandomDest(delta,entity)
 {
@@ -732,9 +734,10 @@ function Game(width,height,debugWidth,debugHeight)
 		this.mapEditor = undefined;
 		
 		//this.tileMap = (new TileMapLoader).staticTileMap();
-		this.tileMap = (new TileMapLoader).generateTileMap(10,10);
+		this.tileMap = (new TileMapLoader).generateTileMap(10,10);	//Cannot enter tiles tileX > 9
 		this.tileMap.debug = true;
 
+		this.tileMap.tileMap[5][5] = 4;
 		this.tileMap.addEventToTile(5,5,function(){ 
 			
 			if(player.tileX == 5 && player.tileY == 5)
