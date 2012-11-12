@@ -341,7 +341,8 @@ function Animation(animationInterval,sprite,frames)
 		var frame = this.frames[this.currentFrame];
 
 		ctx.drawImage(this.sprite,frame.x,frame.y,
-										frame.width,frame.height,-25,20,
+										frame.width,frame.height,
+										frame.xshift,frame.yshift,
 										frame.width,frame.height);
 
 	};
@@ -521,10 +522,10 @@ function createPlayer(tileMap)
 	var sprite = new Image();
     sprite.src = "images/BaseSpriteSheet.png";
 
-	var frames = [{width:64,height:64,x:0,y:0},
-				{width:64,height:64,x:64,y:0},
-				{width:64,height:64,x:128,y:0},
-				{width:64,height:64,x:64,y:0}
+	var frames = [{width:64,height:64,x:0,y:0,xshift:-25,yshift:20},
+				{width:64,height:64,x:64,y:0,xshift:-25,yshift:20},
+				{width:64,height:64,x:128,y:0,xshift:-25,yshift:20},
+				{width:64,height:64,x:64,y:0,xshift:-25,yshift:20}
 				];
 
 	var p = new Entity(tileMap,0,0);
@@ -546,7 +547,7 @@ function createEnemy(tileMap,x,y)
     e.addComponent(generateRandomDest);
 	//e.addComponent(drawHitBoxComponent);
 	
-	var frames = [{width:64,height:64,x:0,y:0}];
+	var frames = [{width:64,height:64,x:0,y:0,xshift:-25,yshift:20}];
 	var esprite = new Image();
 	esprite.src = "images/SpriteShooting.png";
 
@@ -559,7 +560,7 @@ function createBullet(tileMap,dest,x,y)
 	var sprite = new Image();
 	sprite.src = "images/bullet.png";
 
-	var frames = [{width:5,height:5,x:11,y:11}]
+	var frames = [{width:5,height:5,x:11,y:11,xshift:-25,yshift:20}]
 
 	var b = new Entity(tileMap,player.tileX,player.tileY);
 	b.tileXPos = player.tileXPos;
@@ -639,7 +640,7 @@ function drawHitBoxComponent(delta,entity)
 	
 	ctx.strokeStyle = "rgb(1.0,0.0,0.0)";
 	ctx.beginPath();
-	ctx.arc(0,0,12.5,0*Math.PI,2*Math.PI);
+	ctx.arc(7.5,50,12.5,0*Math.PI,2*Math.PI);
 	ctx.restore();
 	ctx.stroke();
 }
