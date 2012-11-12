@@ -400,6 +400,11 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.updateWithDelta = function(delta)
 	{
+		//Work around the sticking bug. This needs to be solved at the source [DEBUG]
+		if(isNaN(this.tileX) || isNaN(this.tileY) || isNaN(this.tileXPos) || isNaN(this.tileXPos)) {
+			console.log("Tile position has become Nan");
+			this.unmove();
+		}
       	for(var i = 0;i < this.components.length;i++)
           this.components[i](delta,this);
 	};
@@ -408,18 +413,8 @@ function Entity(tileMap,tileX,tileY)
 	{
 		ctx.save();
 		//Translate to the tile	
-		var screenX = (this.tileY * this.tileWidth / 2) + 
-									(this.tileX * this.tileWidth / 2);
-		var screenY = (this.tileX * this.tileHeight / 2) - 
-									(this.tileY * this.tileHeight / 2);
-		
-		ctx.translate(screenX,screenY);		
-		
-		screenX = this.tileXPos + this.tileYPos;
-		screenY = (this.tileXPos - this.tileYPos) / 2 + 0.0; //The 0.0 is a z coord for depth sorting
-
 		var pos = this.screenPosition();
-		ctx.translate(screenX,screenY);
+		ctx.translate(pos.x,pos.y);
 
 		if(this.animations == undefined)
 			this.animations = [];
@@ -493,7 +488,7 @@ function Entity(tileMap,tileX,tileY)
 		var screenY = (this.tileX * this.tileHeight / 2) - 
 									(this.tileY * this.tileHeight / 2);			
 
-		//Having these coordinates fixes a jump between tiles, I do not know why
+		//Having these coordinates fixes a jump between tiles, I do not know why [DEBUG]
 		screenX /= 2;	
 		screenY /= 2;	
 
@@ -547,6 +542,7 @@ function createEnemy(tileMap,x,y)
 	e.life = 2;
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
+	e.addComponent(drawHitBoxComponent);
 	
 	var frames = [{width:64,height:64,x:0,y:0}];
 	var esprite = new Image();
@@ -631,6 +627,20 @@ function pathFollowerComponent(delta,entity)
 	}
 }
 
+function drawHitBoxComponent(delta,entity)
+{
+	console.log("Drawing hit box");
+	ctx.save();
+	
+	var screenPos = entity.screenPosition();
+	ctx.translate(screenPos.x,screenPos.y);
+	
+	ctx.strokeStyle = "rgb(1.0,0.0,0.0)";
+	ctx.beginPath();
+	ctx.arc(0,0,25,0*Math.PI,2*Math.PI);
+	ctx.stroke();
+	ctx.restore();
+}
 function generateRandomDest(delta,entity)
 {
   	if(entity.dest === undefined) {
@@ -849,7 +859,7 @@ function Game(width,height,debugWidth,debugHeight)
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
 		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
-		
+	
 		if(this.state == "game over") {
 			ctx.save();
 			
