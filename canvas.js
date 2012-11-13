@@ -596,7 +596,9 @@ function createPlayer(tileMap)
 	p.life = 20;
 	p.player = true;
 	p.addComponent(headToComponent);
-	
+
+	p.weapon = new Weapon(tileMap,p,1,1,undefined);
+
 	return p;
 }
 
@@ -615,6 +617,8 @@ function createEnemy(tileMap,x,y)
 	esprite.src = "images/SpriteShooting.png";
 
 	e.addAnimation(new Animation(0,esprite,frames));
+	
+	e.weapon = new Weapon(tileMap,e,1,1,undefined);
     return e;
 }
 
@@ -748,23 +752,25 @@ function headAlongVector(delta,entity)
 	if(entity.xmove !== undefined && entity.ymove !== undefined) 
 		entity.move(entity.xmove,entity.ymove);
 }
-/*
-function Weapon(damage,shots,ammo)
+
+function Weapon(tileMap,entity,damage,shots,ammo)
 {
+	this.entity = entity;
+	this.tileMap = tileMap;
 	this.damage = damage;
 	this.shots = shots;
 	this.ammo = ammo;
 
 	this.fire = function(dest)
 	{
-		if(ammo !== undefined)
-			this.shots--;
-		if(ammo !=== undefined && ammo < 1)
+		if(this.ammo !== undefined)
+		this.shots--;
+		if(this.ammo !== undefined && this.ammo < 1)
 			return undefined;	
-		return createBullet();
+		return createBullet(tileMap,entity,dest);
 	};
 }
-*/
+
 function Game(width,height,debugWidth,debugHeight) 
 {
 	this.width = width;
@@ -1048,6 +1054,12 @@ function Game(width,height,debugWidth,debugHeight)
 			case 3:
 				//Add new bullet in direction
 			bullets.push(createBullet(this.tileMap,player,tile));
+			//Add new bullet in direction
+				if(player.weapon !== undefined) {
+					var b = player.weapon.fire(tile);
+					if(b !== undefined)
+						bullets.push(b);
+				}
 				break;
 			default:
 				break;
