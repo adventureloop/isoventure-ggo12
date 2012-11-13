@@ -69,21 +69,6 @@ function keyboard()
 {
 	var moveSpeed = 5;
 	switch(window.event.which) {
-		case 37:
-			player.move(-moveSpeed,0);
-			break;
-		case 38:
-			player.move(0,moveSpeed);
-			break;
-		case 39:
-			player.move(moveSpeed,0);
-			break;
-		case 40:
-			player.move(0,-moveSpeed);
-			break;
-		case 69:
-			player.setDest({tileX:0,tileY:8,tileXPos:0,tileYPos:0});
-			break;
 		case 80:
 			console.log("Player position tile:(" + player.tileX + "," + player.tileY + ")"); 
 			break;
@@ -242,7 +227,7 @@ function TileMap(tiles,tileMap)
 	};
 }
 
-function TileMapLoader()
+function LevelLoader()
 {
 	this.loadTiles = function()
 	{
@@ -303,6 +288,84 @@ function TileMapLoader()
 		tileMap.width = tileMap.length;
 		tileMap.height = tileMap[0].length;
 		return new TileMap(this.loadTiles(),tileMap);
+	};
+
+	this.level1 = function() 
+	{
+		var tileMap = [];
+		var width = 10;
+		var height = 10;
+		for(var i = 0;i< width;i++) {
+			var tmp = [];
+			for(var j = 0;j < height;j++) {
+				tmp.push(3);
+			}
+			tileMap.push(tmp);
+		}
+		tileMap.width = tileMap.length;
+		tileMap.height = tileMap[0].length;
+		
+		var level = new TileMap(this.loadTiles(),tileMap);
+		
+		level.tileMap[5][5] = 4;
+		level.addEventToTile(5,5,function(){ 
+				if(player.tileX == 5 && player.tileY == 5) {
+					game.state = "level complete";
+					game.currentLevel = 2;
+				}
+		});
+
+		var entities = []	
+		for(var i = 1;i < 4;i++) {
+			entities.push(createEnemy(level,i+2,6));
+		}
+		
+		var e = createEnemy(level,1,1);
+		e.clearComponents();
+		e.addComponent(pathFollowerComponent);
+		e.addComponent(headToComponent);
+		entities.push(e);
+
+		return {tileMap:level,entities:entities};
+	};
+
+	this.level2 = function() 
+	{
+		var tileMap = [];
+		var width = 10;
+		var height = 10;
+		for(var i = 0;i< width;i++) {
+			var tmp = [];
+			for(var j = 0;j < height;j++) {
+				tmp.push(5);
+			}
+			tileMap.push(tmp);
+		}
+		tileMap.width = tileMap.length;
+		tileMap.height = tileMap[0].length;
+		
+		var level = new TileMap(this.loadTiles(),tileMap);
+		
+		level.tileMap[5][5] = 4;
+		level.addEventToTile(5,5,function(){ 
+				if(player.tileX == 5 && player.tileY == 5) {
+					game.state = "level complete";
+					game.currentLevel = 3;
+				}
+		});
+
+		var entities = []	
+		for(var i = 1;i < 4;i++) {
+			entities.push(createEnemy(level,i+2,6));
+		}
+		
+		var e = createEnemy(level,1,1);
+		e.clearComponents();
+		e.addComponent(pathFollowerComponent);
+		e.addComponent(headToComponent);
+		entities.push(e);
+
+		return {tileMap:level,entities:entities};
 	};
 }
 
@@ -702,10 +765,10 @@ function Game(width,height,debugWidth,debugHeight)
 	
 	var bullets = [];
 	var entities = [];
-	
-	var maxLevel = 2;
-	var currentLevel = 1;
-	this.mapLoader = new TileMapLoader();
+
+	this.maxLevel = 2;
+	this.currentLevel = 1;
+	this.levelLoader = new LevelLoader();
 
 	this.run = function()
 	{
@@ -739,49 +802,38 @@ function Game(width,height,debugWidth,debugHeight)
 		this.mapEditor = undefined;
 		
 		//this.tileMap = (new TileMapLoader).staticTileMap();
-		console.log("Current level is " + currentLevel);
-		switch(currentLevel) {
+	//	console.log("Current level is " + currentLevel);
+		var level;
+		switch(this.currentLevel) {
 			case 1:
-				this.tileMap = this.mapLoader.generateTileMap(10,10);		
-				this.tileMap.tileMap[5][5] = 4;
-				this.tileMap.addEventToTile(5,5,function(){ 
-			
-				if(player.tileX == 5 && player.tileY == 5)
-					game.state = "level complete";
-					currentLevel = 2;
-				});
+				level = this.levelLoader.level1();		
 				break;
 			case 2:
-				this.tileMap = this.mapLoader.generateTileMap(15,15);		
+				level = this.levelLoader.level2();		
 				break;
 			default:
 				break;
 		}
+		this.tileMap = level.tileMap;
+		entities = level.entities;
 		//Cannot enter tiles tileX > 9
 		//this.tileMap.debug = true;
 
 		//this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
 	
-		player = createPlayer(this.tileMap);
-	
+		if(player === undefined)
+			player = createPlayer(this.tileMap);
 		bullets = [];
-		entities = [];
-
-		for(var i = 1;i < 4;i++) {
-			entities.push(createEnemy(this.tileMap,i+2,6));
-		}
-		
-		var e = createEnemy(this.tileMap,1,1);
-		e.clearComponents();
-		e.addComponent(pathFollowerComponent);
-		e.addComponent(headToComponent);
-		entities.push(e);
+		//entities = [];
 		
 		this.state = "running";
 	};
 	
 	this.updateWithDelta = function(delta) 
 	{
+		if(this.currentLevel > this.maxLevel)
+			this.state = "complete";
+
 		if(this.state === "starting") {
 			this.loadLevel();
 			return;
@@ -873,12 +925,31 @@ function Game(width,height,debugWidth,debugHeight)
 			ctx.restore();
 		}
 		
+		if(this.state == "complete") {
+			ctx.save();
+			
+			ctx.fillStyle = "rgba(0,0,0,0.5)";
+			ctx.fillRect(0,0,this.width,this.height);
+			
+			ctx.font = "italic 40px Arial";
+			ctx.fillStyle = "rgb(255,0,0)";
+			ctx.fillText("You WIINNN!!!!",this.width/2-100,this.height/2);
+			
+			ctx.font = "italic 20px Arial";
+			ctx.fillStyle = "rgb(255,0,0)";
+			ctx.fillText("Thank you for playing",this.width/2-75,this.height/2+25);
+			
+			ctx.restore();
+			return;
+		}
+
 		ctx.strokeText("FPS: " + this.latestFPS,2,10);
 		ctx.strokeText("BUILD: Lots of levels",
 								this.width-112,this.height-2);
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
 		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
+		ctx.strokeText("Level: " + this.currentLevel,225,this.height-2);
 	
 		if(this.state == "game over") {
 			ctx.save();
@@ -892,7 +963,7 @@ function Game(width,height,debugWidth,debugHeight)
 			
 			ctx.font = "italic 20px Arial";
 			ctx.fillStyle = "rgb(255,0,0)";
-			ctx.fillText("Press 'r' to restart",this.width/2-75,this.height/2+25);
+			ctx.fillText("Click to restart",this.width/2-75,this.height/2+25);
 			
 			ctx.restore();
 		}
@@ -909,7 +980,7 @@ function Game(width,height,debugWidth,debugHeight)
 			
 			ctx.font = "italic 20px Arial";
 			ctx.fillStyle = "rgb(0,255,0)";
-			ctx.fillText("Press 'r' for the next level",this.width/2-75,this.height/2+25);
+			ctx.fillText("Click to continue",this.width/2-75,this.height/2+25);
 			
 			ctx.restore();
 		}
@@ -964,7 +1035,8 @@ function Game(width,height,debugWidth,debugHeight)
 			default:
 				break;
 			}
-		}
+		} else
+			this.state = "starting";
 	} 
 }
 
