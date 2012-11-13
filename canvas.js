@@ -618,20 +618,21 @@ function createEnemy(tileMap,x,y)
     return e;
 }
 
-function createBullet(tileMap,dest,x,y)
+function createBullet(tileMap,pos,dest)
 {
 	var sprite = new Image();
 	sprite.src = "images/bullet.png";
 
 	var frames = [{width:5,height:5,x:11,y:11,xshift:5,yshift:50}]
 
-	var b = new Entity(tileMap,player.tileX,player.tileY);
-	b.tileXPos = player.tileXPos;
-	b.tileYPos = player.tileYPos;
+	var b = new Entity(tileMap,pos.tileX,pos.tileY);
+	b.tileXPos = pos.tileXPos;
+	b.tileYPos = pos.tileYPos;
 	b.addAnimation(new Animation(0,sprite,frames));
 	b.addComponent(headAlongVector);
 	b.setDest(dest);
 	b.speed = 200;
+	b.damage = 1;
 	return b;
 }
 
@@ -747,7 +748,23 @@ function headAlongVector(delta,entity)
 	if(entity.xmove !== undefined && entity.ymove !== undefined) 
 		entity.move(entity.xmove,entity.ymove);
 }
+/*
+function Weapon(damage,shots,ammo)
+{
+	this.damage = damage;
+	this.shots = shots;
+	this.ammo = ammo;
 
+	this.fire = function(dest)
+	{
+		if(ammo !== undefined)
+			this.shots--;
+		if(ammo !=== undefined && ammo < 1)
+			return undefined;	
+		return createBullet();
+	};
+}
+*/
 function Game(width,height,debugWidth,debugHeight) 
 {
 	this.width = width;
@@ -1030,7 +1047,7 @@ function Game(width,height,debugWidth,debugHeight)
 				break;
 			case 3:
 				//Add new bullet in direction
-				bullets.push(createBullet(this.tileMap,tile,player.tileX,player.tileY));
+			bullets.push(createBullet(this.tileMap,player,tile));
 				break;
 			default:
 				break;
