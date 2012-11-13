@@ -324,6 +324,7 @@ function LevelLoader()
 		e.clearComponents();
 		e.addComponent(pathFollowerComponent);
 		e.addComponent(headToComponent);
+		//e.addComponent(sentryComponent);
 		entities.push(e);
 
 		return {tileMap:level,entities:entities};
@@ -446,6 +447,7 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.components = [];
 	this.dest = undefined;
+	this.time;		//Time increases with the game.
 	
 	this.collidesWithEntity = function(entity)
 	{		
@@ -464,6 +466,7 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.updateWithDelta = function(delta)
 	{
+		this.time += delta;
 		//Work around the sticking bug. This needs to be solved at the source [DEBUG]
 		if(isNaN(this.tileX) || isNaN(this.tileY) || isNaN(this.tileXPos) || isNaN(this.tileXPos)) {
 			console.log("Tile position has become NaN");
@@ -611,7 +614,9 @@ function createEnemy(tileMap,x,y)
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
 	//e.addComponent(drawHitBoxComponent);
-	
+
+	e.addComponent(sentryComponent);
+
 	var frames = [{width:64,height:64,x:0,y:0,xshift:-25,yshift:20}];
 	var esprite = new Image();
 	esprite.src = "images/SpriteShooting.png";
@@ -712,6 +717,26 @@ function drawHitBoxComponent(delta,entity)
 	ctx.restore();
 	ctx.stroke();
 }
+
+function sentryComponent(delta,entity)
+{
+	//console.log("Im a sentry dur dur");
+	var mypos = entity.worldPosition();
+	var x = mypos.x;
+	var y = mypos.y;		
+				
+	var enpos = player.worldPosition();
+	var enX = enpos.x;
+	var enY = enpos.y;
+							
+	var dist = Math.sqrt(Math.pow(enX - x,2) + Math.pow(enY - y,2));
+	if(dist < 100) {
+	//	game.addBullet(entity.weapon.fire({tileX:0,tileY:0,tileXPos:0,tileYPos:0}))
+		game.addBullet(entity.weapon.fire(player))
+		console.log("Shooting");
+	}	
+}
+
 function generateRandomDest(delta,entity)
 {
   	if(entity.dest === undefined) {
@@ -763,6 +788,10 @@ function Weapon(tileMap,entity,damage,shots,ammo)
 
 	this.fire = function(dest)
 	{
+		if(this.entity.lastFired === undefined)
+			this.entity.lastFired = this.entity.time;
+		if(this.entity.time < this.entity.lastFired + 1000)
+			return;
 		if(this.ammo !== undefined)
 		this.shots--;
 		if(this.ammo !== undefined && this.ammo < 1)
@@ -893,8 +922,9 @@ function Game(width,height,debugWidth,debugHeight)
 			for(var i = 0;i < bullets.length;i++) {
 				for(var j = 0;j < entities.length;j++) {
 					if(bullets[i].collidesWithEntity(entities[j])) {
-						bullets[i].hit();
-						entities[j].hit();				
+						;//bullets[i].hit();
+					//	entities[j].hit();				
+					//dfafadfa
 					}	
 				}
 			}
@@ -905,7 +935,8 @@ function Game(width,height,debugWidth,debugHeight)
 				if(entities[i].life > 0)
 					tmp.push(entities[i]);
 			}
-		
+	
+			//Remove bullets that leave the tilemap
 			entities = tmp;
 			tmp = []; 
 			for(var i = 0;i < bullets.length;i++) {
@@ -1066,7 +1097,13 @@ function Game(width,height,debugWidth,debugHeight)
 			}
 		} else
 			this.state = "starting";
-	} 
+	};
+
+	this.addBullet = function(bullet)
+	{
+		if(bullet !== undefined)
+			bullets.push(bullet);
+	};
 }
 
 
