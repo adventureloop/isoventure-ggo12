@@ -945,7 +945,7 @@ function Game(width,height,debugWidth,debugHeight)
 
 		ctx.strokeText("FPS: " + this.latestFPS,2,10);
 		ctx.strokeText("BUILD: Lots of levels",
-								this.width-112,this.height-2);
+								this.width-112,10);
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
 		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
