@@ -69,21 +69,6 @@ function keyboard()
 {
 	var moveSpeed = 5;
 	switch(window.event.which) {
-		case 37:
-			player.move(-moveSpeed,0);
-			break;
-		case 38:
-			player.move(0,moveSpeed);
-			break;
-		case 39:
-			player.move(moveSpeed,0);
-			break;
-		case 40:
-			player.move(0,-moveSpeed);
-			break;
-		case 69:
-			player.setDest({tileX:0,tileY:8,tileXPos:0,tileYPos:0});
-			break;
 		case 80:
 			console.log("Player position tile:(" + player.tileX + "," + player.tileY + ")"); 
 			break;
@@ -978,7 +963,7 @@ function Game(width,height,debugWidth,debugHeight)
 			
 			ctx.font = "italic 20px Arial";
 			ctx.fillStyle = "rgb(255,0,0)";
-			ctx.fillText("Press 'r' to restart",this.width/2-75,this.height/2+25);
+			ctx.fillText("Click to restart",this.width/2-75,this.height/2+25);
 			
 			ctx.restore();
 		}
@@ -995,7 +980,7 @@ function Game(width,height,debugWidth,debugHeight)
 			
 			ctx.font = "italic 20px Arial";
 			ctx.fillStyle = "rgb(0,255,0)";
-			ctx.fillText("Press 'r' for the next level",this.width/2-75,this.height/2+25);
+			ctx.fillText("Click to continue",this.width/2-75,this.height/2+25);
 			
 			ctx.restore();
 		}
@@ -1050,7 +1035,8 @@ function Game(width,height,debugWidth,debugHeight)
 			default:
 				break;
 			}
-		}
+		} else
+			this.state = "starting";
 	} 
 }
 
