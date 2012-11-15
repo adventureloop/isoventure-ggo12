@@ -447,7 +447,7 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.components = [];
 	this.dest = undefined;
-	this.time;		//Time increases with the game.
+	this.time = 0;		//Time increases with the game.
 	
 	this.collidesWithEntity = function(entity)
 	{		
@@ -600,7 +600,7 @@ function createPlayer(tileMap)
 	p.player = true;
 	p.addComponent(headToComponent);
 
-	p.weapon = new Weapon(tileMap,p,1,1,undefined);
+	p.weapon = new Weapon(tileMap,p,1,1,undefined,500);
 
 	return p;
 }
@@ -623,7 +623,7 @@ function createEnemy(tileMap,x,y)
 
 	e.addAnimation(new Animation(0,esprite,frames));
 	
-	e.weapon = new Weapon(tileMap,e,1,1,undefined);
+	e.weapon = new Weapon(tileMap,e,1,1,undefined,500);
     return e;
 }
 
@@ -733,7 +733,6 @@ function sentryComponent(delta,entity)
 	if(dist < 100) {
 	//	game.addBullet(entity.weapon.fire({tileX:0,tileY:0,tileXPos:0,tileYPos:0}))
 		game.addBullet(entity.weapon.fire(player))
-		console.log("Shooting");
 	}	
 }
 
@@ -778,20 +777,22 @@ function headAlongVector(delta,entity)
 		entity.move(entity.xmove,entity.ymove);
 }
 
-function Weapon(tileMap,entity,damage,shots,ammo)
+function Weapon(tileMap,entity,damage,shots,ammo,delay)
 {
 	this.entity = entity;
 	this.tileMap = tileMap;
 	this.damage = damage;
 	this.shots = shots;
 	this.ammo = ammo;
+	this.delay = delay;
 
 	this.fire = function(dest)
 	{
 		if(this.entity.lastFired === undefined)
 			this.entity.lastFired = this.entity.time;
-		if(this.entity.time < this.entity.lastFired + 1000)
+		if(this.entity.time < this.entity.lastFired + this.delay)
 			return;
+		this.entity.lastFired = this.entity.time;
 		if(this.ammo !== undefined)
 		this.shots--;
 		if(this.ammo !== undefined && this.ammo < 1)
@@ -920,11 +921,15 @@ function Game(width,height,debugWidth,debugHeight)
 
 			//Check whether bullets have hit enemy
 			for(var i = 0;i < bullets.length;i++) {
+				if(bullets[i].collidesWithEntity(player)) {
+					bullets[i].hit();
+					player.hit();
+					continue;
+				}
 				for(var j = 0;j < entities.length;j++) {
-					if(bullets[i].collidesWithEntity(entities[j])) {
-						;//bullets[i].hit();
-					//	entities[j].hit();				
-					//dfafadfa
+					if(bullets[i].collidesWithEntity(entities[j]) && bullets[i].time > 300) {
+						bullets[i].hit();
+						entities[j].hit();				
 					}	
 				}
 			}
