@@ -921,13 +921,15 @@ function Game(width,height,debugWidth,debugHeight)
 
 			//Check whether bullets have hit enemy
 			for(var i = 0;i < bullets.length;i++) {
+				if(bullets[i].time < 300)
+					continue;
 				if(bullets[i].collidesWithEntity(player)) {
 					bullets[i].hit();
 					player.hit();
 					continue;
 				}
 				for(var j = 0;j < entities.length;j++) {
-					if(bullets[i].collidesWithEntity(entities[j]) && bullets[i].time > 300) {
+					if(bullets[i].collidesWithEntity(entities[j])) {
 						bullets[i].hit();
 						entities[j].hit();				
 					}	
