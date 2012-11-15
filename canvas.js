@@ -652,6 +652,13 @@ function headToComponent(delta,entity)
       entity.currentAnimation.updateWithDelta(delta);
 
 	if(entity.dest !== undefined) {
+		//Once we have arrived clear out the destination.
+		if(entity.dest.tileX === entity.tileX && entity.dest.tileY === entity.tileY) {
+			entity.dest = undefined;
+			//if(this.dest.tileXPos === this.tileXPos && this.dest.tileYPos === this.tileYPos)
+			//	this.dest = undefined;
+		}
+
 		var playerX = entity.tileX;
 		var playerY = entity.tileY;
 
@@ -671,13 +678,6 @@ function headToComponent(delta,entity)
 		var xmove = fx*step;
 		var ymove = fy*step;
 		entity.move(xmove,ymove);
-
-		//Once we have arrived clear out the destination.
-		if(entity.dest.tileX === entity.tileX && entity.dest.tileY === entity.tileY) {
-			entity.dest = undefined;
-			//if(this.dest.tileXPos === this.tileXPos && this.dest.tileYPos === this.tileYPos)
-			//	this.dest = undefined;
-		}
     }
 }
 
