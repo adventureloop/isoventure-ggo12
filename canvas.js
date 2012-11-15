@@ -28,7 +28,7 @@ function init()
 	document.onkeydown = keyboard;	
 	document.oncontextmenu = contextMenu;
 	document.getElementById('editor').onmousedown = mouse;	
-	
+
 	setInterval(function(){game.run();},FPS); //Wrapped in an anon func, to stop the scope on run changing
 }
 
