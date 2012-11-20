@@ -30,7 +30,7 @@ function init()
 	document.oncontextmenu = contextMenu;
 	document.getElementById('editor').onmousedown = mouse;	
 
-	audioManager = new AudioManager(['../sounds/Shoot.wav']);
+	audioManager = new AudioManager(['sounds/Shoot.wav']);
 	audioManager.loadSounds(function(){game.finishedLoadingSounds();});
 
 	setInterval(function(){game.run();},FPS); //Wrapped in an anon func, to stop the scope on run changing
@@ -556,9 +556,9 @@ function Entity(tileMap,tileX,tileY)
 		this.tileYPos = this.oldTileYPos;
 	};
 	
-	this.hit = function()
+	this.hit = function(damage)
 	{
-		this.life--;
+		this.life -= damage;
 	};
 	
 	this.worldPosition = function()
@@ -620,7 +620,7 @@ function createPlayer(tileMap)
 	p.player = true;
 	p.addComponent(headToComponent);
 	p.hitBox = true;
-	p.weapon = new Weapon(tileMap,p,1,10,500,2000);
+	p.weapon = new Weapon(tileMap,p,5,10,750,1000);
 
 	return p;
 }
@@ -644,11 +644,11 @@ function createEnemy(tileMap,x,y)
 
 	e.addAnimation(new Animation(0,esprite,frames));
 	
-	e.weapon = new Weapon(tileMap,e,1,undefined,500,1000);
+	e.weapon = new Weapon(tileMap,e,1,undefined,250,2000);
     return e;
 }
 
-function createBullet(tileMap,pos,dest,maxTime)
+function createBullet(tileMap,pos,dest,maxTime,damage)
 {
 	var sprite = new Image();
 	sprite.src = "images/bullet.png";
@@ -662,7 +662,7 @@ function createBullet(tileMap,pos,dest,maxTime)
 	b.addComponent(headAlongVector);
 	b.setDest(dest);
 	b.speed = 200;
-	b.damage = 1;
+	b.damage = damage;
 	b.maxTime = maxTime;
 	return b;
 }
@@ -848,7 +848,7 @@ function Weapon(tileMap,entity,damage,ammo,delay,maxTime)
 
 		//Manually play the fire sound
 		audioManager.playSound(0);
-		return createBullet(tileMap,entity,dest,maxTime);
+		return createBullet(tileMap,entity,dest,maxTime,damage);
 	};
 }
 
@@ -974,14 +974,14 @@ function Game(width,height,debugWidth,debugHeight)
 				if(bullets[i].time < 300)
 					continue;
 				if(bullets[i].collidesWithEntity(player)) {
-					bullets[i].hit();
-					player.hit();
+					bullets[i].hit(1);
+					player.hit(bullets[i].damage);
 					continue;
 				}
 				for(var j = 0;j < entities.length;j++) {
 					if(bullets[i].collidesWithEntity(entities[j])) {
 						bullets[i].hit();
-						entities[j].hit();				
+						entities[j].hit(bullets[i].damage);				
 					}	
 				}
 			}
