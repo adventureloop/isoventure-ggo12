@@ -297,6 +297,7 @@ function LevelLoader()
 
 	this.level1 = function() 
 	{
+		console.log("Starting level 1 ");
 		var tileMap = [];
 		var width = 20;
 		var height = 20;
@@ -343,6 +344,7 @@ function LevelLoader()
 
 	this.level2 = function() 
 	{
+		console.log("Starting level 2");
 		var tileMap = [];
 		var width = 10;
 		var height = 10;
@@ -371,9 +373,9 @@ function LevelLoader()
 
 		if(player === undefined)
 			player = createPlayer(level);
-		player.tileX = 5;
-		player.tileY = 2;
-
+		player.tileX = 4;
+		player.tileY = 4;
+		player.setDest(undefined);	
 		var entities = [];/*
 		for(var i = 1;i < 4;i++) {
 			entities.push(createEnemy(level,i+2,6));
@@ -455,7 +457,8 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.speed = 50;
 	this.life = 1;
-	
+	this.maxLife;
+
 	this.player = false;
 	
 	this.components = [];
@@ -503,7 +506,7 @@ function Entity(tileMap,tileX,tileY)
 			
 		ctx.restore();
 		
-		//drawHitBoxComponent(0,this)
+		drawHealthBarComponent(0,this)
 	};
 	
 	this.addAnimation = function(animation)
@@ -610,6 +613,7 @@ function createPlayer(tileMap)
 	var p = new Entity(tileMap,0,0);
 	p.addAnimation(new Animation(200,sprite,frames));
 	p.life = 20;
+	p.maxLife = 20;
 	p.player = true;
 	p.addComponent(headToComponent);
 
@@ -623,10 +627,10 @@ function createEnemy(tileMap,x,y)
 {
 	var e = new Entity(tileMap,x,y);
 	e.speed = 15;
-	e.life = 2;
+	e.life = 5;
+	e.maxLife = 5;
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
-	//e.addComponent(drawHitBoxComponent);
 
 	e.addComponent(sentryComponent);
 
@@ -731,9 +735,30 @@ function drawHitBoxComponent(delta,entity)
 	ctx.stroke();
 }
 
+function drawHealthBarComponent(delta,entity)
+{
+	//console.log("Drawing hit box");
+	ctx.save();
+	
+	var screenPos = entity.screenPosition();
+	ctx.translate(screenPos.x,screenPos.y);
+	
+	ctx.fillStyle = "rgb(255,0,0)";
+	ctx.fillRect(-5,15,25,5);
+	
+	entity.maxHealth = 2;
+	var size = entity.life / entity.maxLife;
+	size = (size > 1.0)? 1.0 : size;	//If the size is greater than one, we get a horrible long bar
+
+	ctx.fillStyle = "rgb(0,255,0)";
+	ctx.fillRect(-10,15,35 * size,5);
+	
+
+	ctx.restore();
+}
+
 function sentryComponent(delta,entity)
 {
-	//console.log("Im a sentry dur dur");
 	var mypos = entity.worldPosition();
 	var x = mypos.x;
 	var y = mypos.y;		
