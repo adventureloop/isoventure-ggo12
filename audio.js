@@ -1,78 +1,68 @@
+//Audio stuff follows. I do not enjoy audio stuff
 //window.onload = init;
-var context;
-var bufferLoader;
 
-function init() {
-	context = new webkitAudioContext();
-	
-	bufferLoader = new BufferLoader(
-		context,
-		[
-    		'../sounds/Shot.wav',
-    		'../sounds/Shot.wav',
-		],
-		finishedLoading
-	);
-
-	bufferLoader.load();
+function init()
+{
+	var manager = new AudioManager(['../sounds/Shoot.wav']);
+	manager.loadSounds(function(){manager.playSound(0)});
 }
 
-function finishedLoading(bufferList) {
-	// Create two sources and play them both together.
-	var source1 = context.createBufferSource();
-	var source2 = context.createBufferSource();
-	source1.buffer = bufferList[0];
-	source2.buffer = bufferList[1];
-
-	source1.connect(context.destination);
-	source2.connect(context.destination);
-	source1.noteOn(0);
-	source2.noteOn(0);
-}
-
-function BufferLoader(context, urlList, callback) {
-	this.context = context;
+function AudioManager(urlList)
+{
+	this.context = new webkitAudioContext();
 	this.urlList = urlList;
-	this.onload = callback;
 	this.bufferList = new Array();
 	this.loadCount = 0;
-}
 
-BufferLoader.prototype.loadBuffer = function(url, index) {
-	// Load buffer asynchronously
-	var request = new XMLHttpRequest();
-	request.open("GET", url, true);
-	request.responseType = "arraybuffer";
+	this.playSound = function(index)
+	{
+		var sound = this.context.createBufferSource();
+		sound.buffer = this.bufferList[index];
+		sound.connect(this.context.destination);
+		sound.noteOn(0);
+	};
 
-	var loader = this;
+	this.loadBuffer = function(url,index)
+	{
+		// Load buffer asynchronously
+		var request = new XMLHttpRequest();
+		request.open("GET", url, true);
+		request.responseType = "arraybuffer";
 
-	request.onload = function() {
-	// Asynchronously decode the audio file data in request.response
-		loader.context.decodeAudioData(
-			request.response,
-			function(buffer) {
-				if (!buffer) {
-					alert('error decoding file data: ' + url);
-					return;
+		var loader = this;
+
+		request.onload = function() {
+		// Asynchronously decode the audio file data in request.response
+			loader.context.decodeAudioData(
+				request.response,
+				function(buffer) {
+					if (!buffer) {
+						alert('error decoding file data: ' + url);
+						return;
+					}
+					loader.bufferList[index] = buffer;
+					if (++loader.loadCount == loader.urlList.length) {
+						console.log("Finished loading sounds");
+						loader.onload();
+					}
+				},
+				function(error) {
+					console.error('decodeAudioData error', error);
 				}
-				loader.bufferList[index] = buffer;
-				f (++loader.loadCount == loader.urlList.length)
-				loader.onload(loader.bufferList);
-			},
-			function(error) {
-				console.error('decodeAudioData error', error);
-			}
-		);
-	}
+			);
+		}
 
-	request.onerror = function() {
-		alert('BufferLoader: XHR error');
-	}
+		request.onerror = function() {
+			alert('BufferLoader: XHR error');
+		}
 
-	request.send();
-}
+		request.send();
+	};
 
-BufferLoader.prototype.load = function() {
-	for (var i = 0; i < this.urlList.length; ++i)
-	this.loadBuffer(this.urlList[i], i);
+	this.loadSounds = function(onload) 
+	{
+		this.onload = onload;
+		for (var i = 0; i < this.urlList.length; ++i)
+			this.loadBuffer(this.urlList[i], i);
+	};
 }
