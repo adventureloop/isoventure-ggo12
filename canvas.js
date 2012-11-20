@@ -458,6 +458,7 @@ function Entity(tileMap,tileX,tileY)
 	this.speed = 50;
 	this.life = 1;
 	this.maxLife;
+	this.maxTime = 1000;
 
 	this.player = false;
 	
@@ -619,7 +620,7 @@ function createPlayer(tileMap)
 	p.player = true;
 	p.addComponent(headToComponent);
 	p.hitBox = true;
-	p.weapon = new Weapon(tileMap,p,1,10,500);
+	p.weapon = new Weapon(tileMap,p,1,10,500,2000);
 
 	return p;
 }
@@ -643,11 +644,11 @@ function createEnemy(tileMap,x,y)
 
 	e.addAnimation(new Animation(0,esprite,frames));
 	
-	e.weapon = new Weapon(tileMap,e,1,undefined,500);
+	e.weapon = new Weapon(tileMap,e,1,undefined,500,1000);
     return e;
 }
 
-function createBullet(tileMap,pos,dest)
+function createBullet(tileMap,pos,dest,maxTime)
 {
 	var sprite = new Image();
 	sprite.src = "images/bullet.png";
@@ -662,6 +663,7 @@ function createBullet(tileMap,pos,dest)
 	b.setDest(dest);
 	b.speed = 200;
 	b.damage = 1;
+	b.maxTime = maxTime;
 	return b;
 }
 
@@ -820,13 +822,14 @@ function headAlongVector(delta,entity)
 		entity.move(entity.xmove,entity.ymove);
 }
 
-function Weapon(tileMap,entity,damage,ammo,delay)
+function Weapon(tileMap,entity,damage,ammo,delay,maxTime)
 {
 	this.entity = entity;
 	this.tileMap = tileMap;
 	this.damage = damage;
 	this.ammo = ammo;
 	this.delay = delay;
+	this.maxTime = maxTime;
 
 	this.fire = function(dest)
 	{
@@ -845,7 +848,7 @@ function Weapon(tileMap,entity,damage,ammo,delay)
 
 		//Manually play the fire sound
 		audioManager.playSound(0);
-		return createBullet(tileMap,entity,dest);
+		return createBullet(tileMap,entity,dest,maxTime);
 	};
 }
 
@@ -995,7 +998,7 @@ function Game(width,height,debugWidth,debugHeight)
 			tmp = []; 
 			for(var i = 0;i < bullets.length;i++) {
 				var b = bullets[i];
-				if(!this.tileMap.validTilePos(b.tileX,b.tileY) || b.time > 1000)
+				if(!this.tileMap.validTilePos(b.tileX,b.tileY) || b.time > b.maxTime)
 					b.hit();
 				if(b.life > 0)
 					tmp.push(b);
