@@ -5,6 +5,7 @@
  */
 var player;
 var game;
+//var audioManager;
 var ctx;
 var debugCtx;
 
@@ -28,6 +29,9 @@ function init()
 	document.onkeydown = keyboard;	
 	document.oncontextmenu = contextMenu;
 	document.getElementById('editor').onmousedown = mouse;	
+
+	audioManager = new AudioManager(['../sounds/Shoot.wav']);
+	audioManager.loadSounds(function(){game.finishedLoadingSounds();});
 
 	setInterval(function(){game.run();},FPS); //Wrapped in an anon func, to stop the scope on run changing
 }
@@ -234,6 +238,7 @@ function LevelLoader()
 		var tiles = [];
 		tiles[0] = undefined;
 		tiles[1] = new Image();
+		tiles[1].src = "images/FloorTile.png";
 		tiles[1].blocksView = false;
 		tiles[2] = new Image();
 		tiles[2].src = "images/WallCube.png";
@@ -293,8 +298,8 @@ function LevelLoader()
 	this.level1 = function() 
 	{
 		var tileMap = [];
-		var width = 10;
-		var height = 10;
+		var width = 20;
+		var height = 20;
 		for(var i = 0;i< width;i++) {
 			var tmp = [];
 			for(var j = 0;j < height;j++) {
@@ -307,9 +312,9 @@ function LevelLoader()
 		
 		var level = new TileMap(this.loadTiles(),tileMap);
 		
-		level.tileMap[5][5] = 4;
-		level.addEventToTile(5,5,function(){ 
-				if(player.tileX == 5 && player.tileY == 5) {
+		level.tileMap[18][18] = 4;
+		level.addEventToTile(18,18,function(){ 
+				if(player.tileX == 18 && player.tileY == 18) {
 					game.state = "level complete";
 					game.currentLevel = 2;
 				}
@@ -317,15 +322,21 @@ function LevelLoader()
 
 		var entities = []	
 		for(var i = 1;i < 4;i++) {
-			entities.push(createEnemy(level,i+2,6));
+			entities.push(createEnemy(level,i+10,6));
 		}
-		
+	
+		//Create a path follow, this is a test
 		var e = createEnemy(level,1,1);
 		e.clearComponents();
 		e.addComponent(pathFollowerComponent);
 		e.addComponent(headToComponent);
-		//e.addComponent(sentryComponent);
+		
 		entities.push(e);
+
+		if(player === undefined)
+			player = createPlayer(level);
+		player.tileX = 5;
+		player.tileY = 5;
 
 		return {tileMap:level,entities:entities};
 	};
@@ -338,7 +349,10 @@ function LevelLoader()
 		for(var i = 0;i< width;i++) {
 			var tmp = [];
 			for(var j = 0;j < height;j++) {
-				tmp.push(5);
+				if(i == 0 || i == width || j == 0 || j== width)
+					tmp.push(2);
+				else
+					tmp.push(1);
 			}
 			tileMap.push(tmp);
 		}
@@ -355,17 +369,16 @@ function LevelLoader()
 				}
 		});
 
-		var entities = []	
+		if(player === undefined)
+			player = createPlayer(level);
+		player.tileX = 5;
+		player.tileY = 2;
+
+		var entities = [];/*
 		for(var i = 1;i < 4;i++) {
 			entities.push(createEnemy(level,i+2,6));
-		}
+		}*/
 		
-		var e = createEnemy(level,1,1);
-		e.clearComponents();
-		e.addComponent(pathFollowerComponent);
-		e.addComponent(headToComponent);
-		entities.push(e);
-
 		return {tileMap:level,entities:entities};
 	};
 }
@@ -797,6 +810,7 @@ function Weapon(tileMap,entity,damage,shots,ammo,delay)
 		this.shots--;
 		if(this.ammo !== undefined && this.ammo < 1)
 			return undefined;	
+		audioManager.playSound(0);//Manually play the fire sound
 		return createBullet(tileMap,entity,dest);
 	};
 }
@@ -814,7 +828,7 @@ function Game(width,height,debugWidth,debugHeight)
     this.latestFPS = 0;
     this.fps = 0;
 
-	this.state = "starting";		//Manage the flow of the game, States: running,paused,gameover
+	this.state = "loading sounds";		//Manage the flow of the game, States: running,paused,gameover
 	
 	var bullets = [];
 	var entities = [];
@@ -869,13 +883,12 @@ function Game(width,height,debugWidth,debugHeight)
 		}
 		this.tileMap = level.tileMap;
 		entities = level.entities;
+		
 		//Cannot enter tiles tileX > 9
 		//this.tileMap.debug = true;
 
 		//this.mapEditor = new TileMapEditor(debugWidth,debugHeight,this.tileMap);
 	
-		if(player === undefined)
-			player = createPlayer(this.tileMap);
 		bullets = [];
 		//entities = [];
 		
@@ -1111,6 +1124,11 @@ function Game(width,height,debugWidth,debugHeight)
 		if(bullet !== undefined)
 			bullets.push(bullet);
 	};
+
+	this.finishedLoadingSounds = function()
+	{
+		this.state = "starting";
+	};
 }
 
 
@@ -1168,5 +1186,68 @@ function TileMapEditor(width,height,tileMap)
 		y = Math.floor(y/(10+5));
         
         this.tileMap.changeTile(x,y);
+	};
+}
+
+//Audio stuff follows. I do not enjoy audio stuff
+//The loading and creation of audio buffers is based off of code
+//from html5rocks.com
+function AudioManager(urlList)
+{
+	this.context = new webkitAudioContext();
+	this.urlList = urlList;
+	this.bufferList = new Array();
+	this.loadCount = 0;
+
+	this.playSound = function(index)
+	{
+		var sound = this.context.createBufferSource();
+		sound.buffer = this.bufferList[index];
+		sound.connect(this.context.destination);
+		sound.noteOn(0);
+	};
+
+	this.loadBuffer = function(url,index)
+	{
+		// Load buffer asynchronously
+		var request = new XMLHttpRequest();
+		request.open("GET", url, true);
+		request.responseType = "arraybuffer";
+
+		var loader = this;
+
+		request.onload = function() {
+		// Asynchronously decode the audio file data in request.response
+			loader.context.decodeAudioData(
+				request.response,
+				function(buffer) {
+					if (!buffer) {
+						alert('error decoding file data: ' + url);
+						return;
+					}
+					loader.bufferList[index] = buffer;
+					if (++loader.loadCount == loader.urlList.length) {
+						console.log("Finished loading sounds");
+						loader.onload();
+					}
+				},
+				function(error) {
+					console.error('decodeAudioData error', error);
+				}
+			);
+		};
+
+		request.onerror = function() {
+			alert('BufferLoader: XHR error');
+		};
+
+		request.send();
+	};
+
+	this.loadSounds = function(onload) 
+	{
+		this.onload = onload;
+		for (var i = 0; i < this.urlList.length; ++i)
+			this.loadBuffer(this.urlList[i], i);
 	};
 }
