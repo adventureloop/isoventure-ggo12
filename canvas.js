@@ -619,7 +619,7 @@ function createPlayer(tileMap)
 	p.player = true;
 	p.addComponent(headToComponent);
 	p.hitBox = true;
-	p.weapon = new Weapon(tileMap,p,1,1,undefined,500);
+	p.weapon = new Weapon(tileMap,p,1,10,500);
 
 	return p;
 }
@@ -643,7 +643,7 @@ function createEnemy(tileMap,x,y)
 
 	e.addAnimation(new Animation(0,esprite,frames));
 	
-	e.weapon = new Weapon(tileMap,e,1,1,undefined,500);
+	e.weapon = new Weapon(tileMap,e,1,undefined,500);
     return e;
 }
 
@@ -820,27 +820,31 @@ function headAlongVector(delta,entity)
 		entity.move(entity.xmove,entity.ymove);
 }
 
-function Weapon(tileMap,entity,damage,shots,ammo,delay)
+function Weapon(tileMap,entity,damage,ammo,delay)
 {
 	this.entity = entity;
 	this.tileMap = tileMap;
 	this.damage = damage;
-	this.shots = shots;
 	this.ammo = ammo;
 	this.delay = delay;
 
 	this.fire = function(dest)
 	{
+		//Limit the firing rate
 		if(this.entity.lastFired === undefined)
 			this.entity.lastFired = this.entity.time;
 		if(this.entity.time < this.entity.lastFired + this.delay)
 			return;
 		this.entity.lastFired = this.entity.time;
+
+		//If ammo is defined limit the number of shots that can be fired
 		if(this.ammo !== undefined)
-		this.shots--;
+			this.ammo--;
 		if(this.ammo !== undefined && this.ammo < 1)
 			return undefined;	
-		audioManager.playSound(0);//Manually play the fire sound
+
+		//Manually play the fire sound
+		audioManager.playSound(0);
 		return createBullet(tileMap,entity,dest);
 	};
 }
@@ -1133,8 +1137,6 @@ function Game(width,height,debugWidth,debugHeight)
 				player.setDest(tile);
 				break;
 			case 3:
-				//Add new bullet in direction
-			bullets.push(createBullet(this.tileMap,player,tile));
 			//Add new bullet in direction
 				if(player.weapon !== undefined) {
 					var b = player.weapon.fire(tile);
