@@ -464,6 +464,7 @@ function Entity(tileMap,tileX,tileY)
 	this.components = [];
 	this.dest = undefined;
 	this.time = 0;		//Time increases with the game.
+	this.hitBox = undefined;
 	
 	this.collidesWithEntity = function(entity)
 	{		
@@ -505,8 +506,9 @@ function Entity(tileMap,tileX,tileY)
 			this.currentAnimation.draw();
 			
 		ctx.restore();
-		
-		drawHealthBarComponent(0,this)
+	
+		if(this.hitBox !== undefined)
+			drawHealthBarComponent(0,this)
 	};
 	
 	this.addAnimation = function(animation)
@@ -612,11 +614,11 @@ function createPlayer(tileMap)
 
 	var p = new Entity(tileMap,0,0);
 	p.addAnimation(new Animation(200,sprite,frames));
-	p.life = 20;
-	p.maxLife = 20;
+	p.life = 10;
+	p.maxLife = 10;
 	p.player = true;
 	p.addComponent(headToComponent);
-
+	p.hitBox = true;
 	p.weapon = new Weapon(tileMap,p,1,1,undefined,500);
 
 	return p;
@@ -629,11 +631,12 @@ function createEnemy(tileMap,x,y)
 	e.speed = 15;
 	e.life = 5;
 	e.maxLife = 5;
+	e.hitBox = true;
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
 
 	e.addComponent(sentryComponent);
-
+	e.attackRange = 300;
 	var frames = [{width:64,height:64,x:0,y:0,xshift:-25,yshift:20}];
 	var esprite = new Image();
 	esprite.src = "images/SpriteShooting.png";
@@ -759,6 +762,8 @@ function drawHealthBarComponent(delta,entity)
 
 function sentryComponent(delta,entity)
 {
+	if(entity.attackRange === undefined)
+		entity.attackRange = 100;
 	var mypos = entity.worldPosition();
 	var x = mypos.x;
 	var y = mypos.y;		
@@ -768,7 +773,7 @@ function sentryComponent(delta,entity)
 	var enY = enpos.y;
 							
 	var dist = Math.sqrt(Math.pow(enX - x,2) + Math.pow(enY - y,2));
-	if(dist < 100) {
+	if(dist < entity.attackRange) {
 	//	game.addBullet(entity.weapon.fire({tileX:0,tileY:0,tileXPos:0,tileYPos:0}))
 		game.addBullet(entity.weapon.fire(player))
 	}	
@@ -981,12 +986,12 @@ function Game(width,height,debugWidth,debugHeight)
 					tmp.push(entities[i]);
 			}
 	
-			//Remove bullets that leave the tilemap
+			//Remove bullets that leave the tilemap and over a certain age
 			entities = tmp;
 			tmp = []; 
 			for(var i = 0;i < bullets.length;i++) {
 				var b = bullets[i];
-				if(!this.tileMap.validTilePos(b.tileX,b.tileY))
+				if(!this.tileMap.validTilePos(b.tileX,b.tileY) || b.time > 1000)
 					b.hit();
 				if(b.life > 0)
 					tmp.push(b);
