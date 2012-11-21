@@ -240,6 +240,7 @@ function LevelLoader()
 		tiles[1] = new Image();
 		tiles[1].src = "images/FloorTile.png";
 		tiles[1].blocksView = false;
+		tiles[1].enterable = true;
 		tiles[2] = new Image();
 		tiles[2].src = "images/WallCube.png";
 		tiles[2].enterable = false;
@@ -351,7 +352,7 @@ function LevelLoader()
 		for(var i = 0;i< width;i++) {
 			var tmp = [];
 			for(var j = 0;j < height;j++) {
-				if(i == 0 || i == width || j == 0 || j== width)
+				if(i == width || j== width)
 					tmp.push(2);
 				else
 					tmp.push(1);
@@ -371,10 +372,12 @@ function LevelLoader()
 				}
 		});
 
-		if(player === undefined)
+		//if(player === undefined)
 			player = createPlayer(level);
+		//player.tileMap = level;
 		player.tileX = 4;
 		player.tileY = 4;
+		//player.move(0,0,0,0);
 		player.setDest(undefined);	
 		var entities = [];/*
 		for(var i = 1;i < 4;i++) {
@@ -550,6 +553,7 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.unmove = function()
 	{
+	console.log("Unmoving");
 		this.tileX = this.oldTileX;
 		this.tileY = this.oldTileY;
 		this.tileXPos = this.oldTileXPos;
@@ -644,7 +648,7 @@ function createEnemy(tileMap,x,y)
 
 	e.addAnimation(new Animation(0,esprite,frames));
 	
-	e.weapon = new Weapon(tileMap,e,1,undefined,250,2000);
+	e.weapon = new Weapon(tileMap,e,1,undefined,400,2000);
     return e;
 }
 
@@ -1059,7 +1063,7 @@ function Game(width,height,debugWidth,debugHeight)
 								this.width-112,10);
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
-		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
+		ctx.strokeText("Bullets: " + player.weapon.ammo,175,this.height-2);
 		ctx.strokeText("Level: " + this.currentLevel,225,this.height-2);
 	
 		if(this.state == "game over") {
