@@ -299,9 +299,10 @@ function LevelLoader()
 	this.level1 = function() 
 	{
 		console.log("Starting level 1 ");
+		console.log("This level has you crash on an enemy planet");
 		var tileMap = [];
-		var width = 20;
-		var height = 20;
+		var width = 25;
+		var height = 25;
 		for(var i = 0;i< width;i++) {
 			var tmp = [];
 			for(var j = 0;j < height;j++) {
@@ -311,34 +312,52 @@ function LevelLoader()
 		}
 		tileMap.width = tileMap.length;
 		tileMap.height = tileMap[0].length;
-		
+
+		//Make the bottom corner crash site
+		for(var i = 0;i< 5;i++)
+			for(var j = 0;j < 5;j++)
+				tileMap[i][j] = 1;
+		for(var i = 0;i < height;i++)
+			tileMap[0][i] = 2;
+		for(var i = 0;i < height/2;i++)
+			tileMap[i][height-1] = 2;
+
 		var level = new TileMap(this.loadTiles(),tileMap);
 		
-		level.tileMap[18][18] = 4;
-		level.addEventToTile(18,18,function(){ 
-				if(player.tileX == 18 && player.tileY == 18) {
+		level.tileMap[22][22] = 4;
+		level.addEventToTile(22,22,function(){ 
+				if(player.tileX == 22 && player.tileY == 22) {
 					game.state = "level complete";
 					game.currentLevel = 2;
 				}
 		});
 
 		var entities = []	
-		for(var i = 1;i < 4;i++) {
+		/*for(var i = 1;i < 4;i++) {
 			entities.push(createEnemy(level,i+10,6));
-		}
+		}*/
 	
 		//Create a path follow, this is a test
-		var e = createEnemy(level,1,1);
+		var e = createEnemy(level,20,20);
 		e.clearComponents();
 		e.addComponent(pathFollowerComponent);
 		e.addComponent(headToComponent);
+		
+		var path = [];
+		path.push({tileX:20,tileY:20,tileXPos:0,tileYPos:0});
+		path.push({tileX:20,tileY:10,tileXPos:0,tileYPos:0});
+		path.push({tileX:10,tileY:10,tileXPos:0,tileYPos:0});
+		path.push({tileX:10,tileY:20,tileXPos:0,tileYPos:0});
+		
+		e.path = path;
+		e.pathIndex = 0;
 		
 		entities.push(e);
 
 		if(player === undefined)
 			player = createPlayer(level);
-		player.tileX = 5;
-		player.tileY = 5;
+		player.tileX = 19;
+		player.tileY = 19;
 
 		return {tileMap:level,entities:entities};
 	};
@@ -372,19 +391,35 @@ function LevelLoader()
 				}
 		});
 
-		//if(player === undefined)
+		if(player === undefined)
 			player = createPlayer(level);
 		//player.tileMap = level;
 		player.tileX = 4;
 		player.tileY = 4;
-		//player.move(0,0,0,0);
 		player.setDest(undefined);	
-		var entities = [];/*
-		for(var i = 1;i < 4;i++) {
-			entities.push(createEnemy(level,i+2,6));
-		}*/
+		var entities = [];
 		
 		return {tileMap:level,entities:entities};
+	};
+
+	this.level3 = function()
+	{
+	console.log("This level has a ton of enemy soldiers");
+	};
+
+	this.level4 = function()
+	{
+	console.log("This level has treasure");
+	};
+
+	this.level5 = function()
+	{
+	console.log("This level has the clone machine");
+	};
+
+	this.level6 = function()
+	{
+	console.log("This level has monsters");
 	};
 }
 
@@ -969,7 +1004,8 @@ function Game(width,height,debugWidth,debugHeight)
 			//Check for collision with the player and the enemy
 			for(var i = 0;i < entities.length;i++) {
 				if(player.collidesWithEntity(entities[i])) {
-					player.hit();
+					player.hit(1);
+					player.unmove();
 				}				
 			}
 
