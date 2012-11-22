@@ -322,6 +322,9 @@ function LevelLoader()
 		for(var i = 0;i < height/2;i++)
 			tileMap[i][height-1] = 2;
 
+		tileMap[24][11] = 1;
+		tileMap[24][12] = 1;
+
 		var level = new TileMap(this.loadTiles(),tileMap);
 		
 		level.tileMap[22][22] = 4;
@@ -653,13 +656,13 @@ function createPlayer(tileMap)
 				];
 
 	var p = new Entity(tileMap,0,0);
-	p.addAnimation(new Animation(200,sprite,frames));
+	p.addAnimation(new Animation(100,sprite,frames));
 	p.life = 10;
 	p.maxLife = 10;
 	p.player = true;
 	p.addComponent(headToComponent);
 	p.hitBox = true;
-	p.weapon = new Weapon(tileMap,p,5,10,750,1000);
+	p.weapon = new Weapon(tileMap,p,2,10,750,1000);
 
 	return p;
 }
