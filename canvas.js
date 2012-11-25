@@ -30,7 +30,7 @@ function init()
 	document.oncontextmenu = contextMenu;
 	document.getElementById('editor').onmousedown = mouse;	
 
-	audioManager = new AudioManager(['../sounds/Shoot.wav']);
+	audioManager = new AudioManager(['sounds/Shoot.wav']);
 	audioManager.loadSounds(function(){game.finishedLoadingSounds();});
 
 	setInterval(function(){game.run();},FPS); //Wrapped in an anon func, to stop the scope on run changing
@@ -240,6 +240,7 @@ function LevelLoader()
 		tiles[1] = new Image();
 		tiles[1].src = "images/FloorTile.png";
 		tiles[1].blocksView = false;
+		tiles[1].enterable = true;
 		tiles[2] = new Image();
 		tiles[2].src = "images/WallCube.png";
 		tiles[2].enterable = false;
@@ -298,9 +299,10 @@ function LevelLoader()
 	this.level1 = function() 
 	{
 		console.log("Starting level 1 ");
+		console.log("This level has you crash on an enemy planet");
 		var tileMap = [];
-		var width = 20;
-		var height = 20;
+		var width = 25;
+		var height = 25;
 		for(var i = 0;i< width;i++) {
 			var tmp = [];
 			for(var j = 0;j < height;j++) {
@@ -310,34 +312,55 @@ function LevelLoader()
 		}
 		tileMap.width = tileMap.length;
 		tileMap.height = tileMap[0].length;
-		
+
+		//Make the bottom corner crash site
+		for(var i = 0;i< 5;i++)
+			for(var j = 0;j < 5;j++)
+				tileMap[i][j] = 1;
+		for(var i = 0;i < height;i++)
+			tileMap[0][i] = 2;
+		for(var i = 0;i < height/2;i++)
+			tileMap[i][height-1] = 2;
+
+		tileMap[24][11] = 1;
+		tileMap[24][12] = 1;
+
 		var level = new TileMap(this.loadTiles(),tileMap);
 		
-		level.tileMap[18][18] = 4;
-		level.addEventToTile(18,18,function(){ 
-				if(player.tileX == 18 && player.tileY == 18) {
+		level.tileMap[22][22] = 4;
+		level.addEventToTile(22,22,function(){ 
+				if(player.tileX == 22 && player.tileY == 22) {
 					game.state = "level complete";
 					game.currentLevel = 2;
 				}
 		});
 
 		var entities = []	
-		for(var i = 1;i < 4;i++) {
+		/*for(var i = 1;i < 4;i++) {
 			entities.push(createEnemy(level,i+10,6));
-		}
+		}*/
 	
 		//Create a path follow, this is a test
-		var e = createEnemy(level,1,1);
+		var e = createEnemy(level,20,20);
 		e.clearComponents();
 		e.addComponent(pathFollowerComponent);
 		e.addComponent(headToComponent);
+		
+		var path = [];
+		path.push({tileX:20,tileY:20,tileXPos:0,tileYPos:0});
+		path.push({tileX:20,tileY:10,tileXPos:0,tileYPos:0});
+		path.push({tileX:10,tileY:10,tileXPos:0,tileYPos:0});
+		path.push({tileX:10,tileY:20,tileXPos:0,tileYPos:0});
+		
+		e.path = path;
+		e.pathIndex = 0;
 		
 		entities.push(e);
 
 		if(player === undefined)
 			player = createPlayer(level);
-		player.tileX = 5;
-		player.tileY = 5;
+		player.tileX = 19;
+		player.tileY = 19;
 
 		return {tileMap:level,entities:entities};
 	};
@@ -351,7 +374,7 @@ function LevelLoader()
 		for(var i = 0;i< width;i++) {
 			var tmp = [];
 			for(var j = 0;j < height;j++) {
-				if(i == 0 || i == width || j == 0 || j== width)
+				if(i == width || j== width)
 					tmp.push(2);
 				else
 					tmp.push(1);
@@ -373,13 +396,11 @@ function LevelLoader()
 
 		if(player === undefined)
 			player = createPlayer(level);
+		//player.tileMap = level;
 		player.tileX = 4;
 		player.tileY = 4;
 		player.setDest(undefined);	
-		var entities = [];/*
-		for(var i = 1;i < 4;i++) {
-			entities.push(createEnemy(level,i+2,6));
-		}*/
+		var entities = [];
 		
 		return {tileMap:level,entities:entities};
 	};
@@ -458,12 +479,14 @@ function Entity(tileMap,tileX,tileY)
 	this.speed = 50;
 	this.life = 1;
 	this.maxLife;
+	this.maxTime = 1000;
 
 	this.player = false;
 	
 	this.components = [];
 	this.dest = undefined;
 	this.time = 0;		//Time increases with the game.
+	this.hitBox = undefined;
 	
 	this.collidesWithEntity = function(entity)
 	{		
@@ -505,8 +528,9 @@ function Entity(tileMap,tileX,tileY)
 			this.currentAnimation.draw();
 			
 		ctx.restore();
-		
-		drawHealthBarComponent(0,this)
+	
+		if(this.hitBox !== undefined)
+			drawHealthBarComponent(0,this)
 	};
 	
 	this.addAnimation = function(animation)
@@ -547,15 +571,16 @@ function Entity(tileMap,tileX,tileY)
 	
 	this.unmove = function()
 	{
+	console.log("Unmoving");
 		this.tileX = this.oldTileX;
 		this.tileY = this.oldTileY;
 		this.tileXPos = this.oldTileXPos;
 		this.tileYPos = this.oldTileYPos;
 	};
 	
-	this.hit = function()
+	this.hit = function(damage)
 	{
-		this.life--;
+		this.life -= damage;
 	};
 	
 	this.worldPosition = function()
@@ -611,17 +636,16 @@ function createPlayer(tileMap)
 				];
 
 	var p = new Entity(tileMap,0,0);
-	p.addAnimation(new Animation(200,sprite,frames));
-	p.life = 20;
-	p.maxLife = 20;
+	p.addAnimation(new Animation(100,sprite,frames));
+	p.life = 10;
+	p.maxLife = 10;
 	p.player = true;
 	p.addComponent(headToComponent);
-
-	p.weapon = new Weapon(tileMap,p,1,1,undefined,500);
+	p.hitBox = true;
+	p.weapon = new Weapon(tileMap,p,2,10,750,1000);
 
 	return p;
 }
-
 
 function createEnemy(tileMap,x,y)
 {
@@ -629,22 +653,23 @@ function createEnemy(tileMap,x,y)
 	e.speed = 15;
 	e.life = 5;
 	e.maxLife = 5;
+	e.hitBox = true;
     e.addComponent(headToComponent);
     e.addComponent(generateRandomDest);
 
 	e.addComponent(sentryComponent);
-
+	e.attackRange = 300;
 	var frames = [{width:64,height:64,x:0,y:0,xshift:-25,yshift:20}];
 	var esprite = new Image();
 	esprite.src = "images/SpriteShooting.png";
 
 	e.addAnimation(new Animation(0,esprite,frames));
 	
-	e.weapon = new Weapon(tileMap,e,1,1,undefined,500);
+	e.weapon = new Weapon(tileMap,e,1,undefined,400,2000);
     return e;
 }
 
-function createBullet(tileMap,pos,dest)
+function createBullet(tileMap,pos,dest,maxTime,damage)
 {
 	var sprite = new Image();
 	sprite.src = "images/bullet.png";
@@ -658,8 +683,20 @@ function createBullet(tileMap,pos,dest)
 	b.addComponent(headAlongVector);
 	b.setDest(dest);
 	b.speed = 200;
-	b.damage = 1;
+	b.damage = damage;
+	b.maxTime = maxTime;
 	return b;
+}
+
+function createConingMachine(tileMap,pos,rate,createFunc)
+{
+	var sprite = new Image();
+	sprite.src = "images/cloningmachine.png";
+
+	var frames = [{width:5,height:5,x:11,y:11,xshift:5,yshift:50}]
+	var c = new Entity(tileMap,pos.tileX,pos.tileY);	
+	c.addAnimation(new Animation(0,sprite,frames));
+
 }
 
 function headToComponent(delta,entity)
@@ -759,6 +796,8 @@ function drawHealthBarComponent(delta,entity)
 
 function sentryComponent(delta,entity)
 {
+	if(entity.attackRange === undefined)
+		entity.attackRange = 100;
 	var mypos = entity.worldPosition();
 	var x = mypos.x;
 	var y = mypos.y;		
@@ -768,7 +807,7 @@ function sentryComponent(delta,entity)
 	var enY = enpos.y;
 							
 	var dist = Math.sqrt(Math.pow(enX - x,2) + Math.pow(enY - y,2));
-	if(dist < 100) {
+	if(dist < entity.attackRange) {
 	//	game.addBullet(entity.weapon.fire({tileX:0,tileY:0,tileXPos:0,tileYPos:0}))
 		game.addBullet(entity.weapon.fire(player))
 	}	
@@ -815,28 +854,33 @@ function headAlongVector(delta,entity)
 		entity.move(entity.xmove,entity.ymove);
 }
 
-function Weapon(tileMap,entity,damage,shots,ammo,delay)
+function Weapon(tileMap,entity,damage,ammo,delay,maxTime)
 {
 	this.entity = entity;
 	this.tileMap = tileMap;
 	this.damage = damage;
-	this.shots = shots;
 	this.ammo = ammo;
 	this.delay = delay;
+	this.maxTime = maxTime;
 
 	this.fire = function(dest)
 	{
+		//Limit the firing rate
 		if(this.entity.lastFired === undefined)
 			this.entity.lastFired = this.entity.time;
 		if(this.entity.time < this.entity.lastFired + this.delay)
 			return;
 		this.entity.lastFired = this.entity.time;
+
+		//If ammo is defined limit the number of shots that can be fired
 		if(this.ammo !== undefined)
-		this.shots--;
+			this.ammo--;
 		if(this.ammo !== undefined && this.ammo < 1)
 			return undefined;	
-		audioManager.playSound(0);//Manually play the fire sound
-		return createBullet(tileMap,entity,dest);
+
+		//Manually play the fire sound
+		audioManager.playSound(0);
+		return createBullet(tileMap,entity,dest,maxTime,damage);
 	};
 }
 
@@ -953,7 +997,8 @@ function Game(width,height,debugWidth,debugHeight)
 			//Check for collision with the player and the enemy
 			for(var i = 0;i < entities.length;i++) {
 				if(player.collidesWithEntity(entities[i])) {
-					player.hit();
+					player.hit(1);
+					player.unmove();
 				}				
 			}
 
@@ -962,14 +1007,14 @@ function Game(width,height,debugWidth,debugHeight)
 				if(bullets[i].time < 300)
 					continue;
 				if(bullets[i].collidesWithEntity(player)) {
-					bullets[i].hit();
-					player.hit();
+					bullets[i].hit(1);
+					player.hit(bullets[i].damage);
 					continue;
 				}
 				for(var j = 0;j < entities.length;j++) {
 					if(bullets[i].collidesWithEntity(entities[j])) {
 						bullets[i].hit();
-						entities[j].hit();				
+						entities[j].hit(bullets[i].damage);				
 					}	
 				}
 			}
@@ -981,12 +1026,12 @@ function Game(width,height,debugWidth,debugHeight)
 					tmp.push(entities[i]);
 			}
 	
-			//Remove bullets that leave the tilemap
+			//Remove bullets that leave the tilemap and over a certain age
 			entities = tmp;
 			tmp = []; 
 			for(var i = 0;i < bullets.length;i++) {
 				var b = bullets[i];
-				if(!this.tileMap.validTilePos(b.tileX,b.tileY))
+				if(!this.tileMap.validTilePos(b.tileX,b.tileY) || b.time > b.maxTime)
 					b.hit();
 				if(b.life > 0)
 					tmp.push(b);
@@ -1047,7 +1092,7 @@ function Game(width,height,debugWidth,debugHeight)
 								this.width-112,10);
 		ctx.strokeText("Health: " + player.life,2,this.height-2);
 		ctx.strokeText("Enemies: " + entities.length,100,this.height-2);
-		ctx.strokeText("Bullets: " + bullets.length,175,this.height-2);
+		ctx.strokeText("Bullets: " + player.weapon.ammo,175,this.height-2);
 		ctx.strokeText("Level: " + this.currentLevel,225,this.height-2);
 	
 		if(this.state == "game over") {
@@ -1128,8 +1173,6 @@ function Game(width,height,debugWidth,debugHeight)
 				player.setDest(tile);
 				break;
 			case 3:
-				//Add new bullet in direction
-			bullets.push(createBullet(this.tileMap,player,tile));
 			//Add new bullet in direction
 				if(player.weapon !== undefined) {
 					var b = player.weapon.fire(tile);
