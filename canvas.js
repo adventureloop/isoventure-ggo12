@@ -404,26 +404,6 @@ function LevelLoader()
 		
 		return {tileMap:level,entities:entities};
 	};
-
-	this.level3 = function()
-	{
-	console.log("This level has a ton of enemy soldiers");
-	};
-
-	this.level4 = function()
-	{
-	console.log("This level has treasure");
-	};
-
-	this.level5 = function()
-	{
-	console.log("This level has the clone machine");
-	};
-
-	this.level6 = function()
-	{
-	console.log("This level has monsters");
-	};
 }
 
 function Animation(animationInterval,sprite,frames)
@@ -667,7 +647,6 @@ function createPlayer(tileMap)
 	return p;
 }
 
-
 function createEnemy(tileMap,x,y)
 {
 	var e = new Entity(tileMap,x,y);
@@ -707,6 +686,17 @@ function createBullet(tileMap,pos,dest,maxTime,damage)
 	b.damage = damage;
 	b.maxTime = maxTime;
 	return b;
+}
+
+function createConingMachine(tileMap,pos,rate,createFunc)
+{
+	var sprite = new Image();
+	sprite.src = "images/cloningmachine.png";
+
+	var frames = [{width:5,height:5,x:11,y:11,xshift:5,yshift:50}]
+	var c = new Entity(tileMap,pos.tileX,pos.tileY);	
+	c.addAnimation(new Animation(0,sprite,frames));
+
 }
 
 function headToComponent(delta,entity)
